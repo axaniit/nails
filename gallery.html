@@ -9,7 +9,7 @@
   <style>
     .galleryWrap {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 18px;
       margin-top: 20px;
     }
@@ -22,11 +22,21 @@
       box-shadow: 0 12px 28px rgba(0,0,0,0.28);
     }
 
+    .galleryImageWrap {
+      background: rgba(255,255,255,0.02);
+      padding: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .galleryCard img {
       width: 100%;
-      height: 360px;
-      object-fit: cover;
+      height: auto;
+      max-height: 520px;
+      object-fit: contain;
       display: block;
+      border-radius: 14px;
     }
 
     .galleryInfo {
@@ -61,7 +71,9 @@
 
   <div class="galleryWrap">
     <div class="galleryCard">
-      <img src="images/image-1.jpeg" alt="Pink and cream sculpted nail set with floral details" />
+      <div class="galleryImageWrap">
+        <img src="images/image-1.jpeg" alt="Pink and cream sculpted nail set with floral details" />
+      </div>
       <div class="galleryInfo">
         <h3>Floral pink sculpted set</h3>
         <p>3D floral details, soft cream accents, and hand-painted pink marbling.</p>
