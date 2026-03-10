@@ -1,4 +1,4 @@
-<!doctype html>
+<<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -23,24 +23,23 @@
     }
 
     .galleryImageWrap {
-      background: rgba(255,255,255,0.02);
-      padding: 14px;
+      padding: 16px;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: rgba(255,255,255,0.02);
     }
 
     .galleryCard img {
       width: 100%;
+      max-width: 700px;
       height: auto;
-      max-height: 520px;
-      object-fit: contain;
       display: block;
       border-radius: 14px;
     }
 
     .galleryInfo {
-      padding: 14px;
+      padding: 14px 16px 18px;
     }
 
     .galleryInfo h3 {
@@ -72,7 +71,8 @@
   <div class="galleryWrap">
     <div class="galleryCard">
       <div class="galleryImageWrap">
-        <img src="images/image-1.jpeg" alt="Pink and cream sculpted nail set with floral details" />
+        <img src="/images/image-1.jpeg" alt="Pink and cream sculpted nail set with floral details"
+             onerror="this.onerror=null; this.src='images/image-1.jpeg';">
       </div>
       <div class="galleryInfo">
         <h3>Floral pink sculpted set</h3>
