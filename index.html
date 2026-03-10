@@ -3,8 +3,59 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b0b10">
   <title>Axani Nails — Booking</title>
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <style>
+    #calendarWrap {
+      margin-top: 18px;
+    }
+    #calendar {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .fc {
+      color: #f5f5fb;
+    }
+    .fc .fc-toolbar-title {
+      color: #f5f5fb;
+      font-size: 1.3rem;
+    }
+    .fc .fc-button {
+      background: #ff8fc7;
+      border: none;
+      color: #130612;
+      font-weight: 700;
+      border-radius: 10px;
+    }
+    .fc .fc-button:hover {
+      background: #ffb3da;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+      background: #ffb3da;
+      color: #130612;
+    }
+    .fc-theme-standard td,
+    .fc-theme-standard th,
+    .fc-theme-standard .fc-scrollgrid {
+      border-color: rgba(255,255,255,0.10);
+    }
+    .fc-daygrid-day-number,
+    .fc-col-header-cell-cushion {
+      color: #f5f5fb;
+      text-decoration: none;
+    }
+    .fc-event {
+      background: rgba(255,143,199,0.18);
+      border: 1px solid rgba(255,143,199,0.45);
+      color: #ffd9ec;
+      border-radius: 10px;
+      padding: 2px 4px;
+    }
+  </style>
 </head>
 <body>
 <header>
@@ -17,30 +68,13 @@
 
 <main>
   <h1>Axani Nails</h1>
-  <p>Request a time below. <b>Booking is not confirmed until approved.</b></p>
+  <p>Choose an available slot from the calendar or use the form dropdown. <b>Booking is not confirmed until approved.</b></p>
 
-  <div class="row">
-    <div class="col card">
-      <h2 style="margin-top:0">Available Times</h2>
-      <p><small>Click a time slot to request it (2 hours default).</small></p>
-      <div id="slotGrid" class="slotGrid"></div>
-      <hr />
-      <button id="openBookingBtn">Request a time</button>
-    </div>
-
-    <div class="col card">
-      <h2 style="margin-top:0">How it works</h2>
-      <ol>
-        <li>Pick a time slot</li>
-        <li>Submit your request</li>
-        <li>I’ll approve/deny and email you a confirmation</li>
-      </ol>
-      <p class="badge">No confirmation = not booked</p>
-    </div>
+  <div class="card" id="calendarWrap">
+    <div id="calendar"></div>
   </div>
 </main>
 
-<!-- BOOKING MODAL -->
 <div id="bookingModal" class="modalBackdrop">
   <div class="modal">
     <div class="modalHeader">
@@ -97,7 +131,6 @@
   </div>
 </div>
 
-<!-- SUBMITTED MODAL -->
 <div id="submittedModal" class="modalBackdrop">
   <div class="modal">
     <div class="modalHeader">
@@ -110,6 +143,8 @@
 </div>
 
 <div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
