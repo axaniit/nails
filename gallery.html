@@ -3,8 +3,48 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b0b10">
   <title>Axani Nails — Gallery</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .galleryWrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .galleryCard {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+    }
+
+    .galleryCard img {
+      width: 100%;
+      height: 360px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .galleryInfo {
+      padding: 14px;
+    }
+
+    .galleryInfo h3 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+    }
+
+    .galleryInfo p {
+      margin: 0;
+      color: #b9b9cc;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+  </style>
 </head>
 <body>
 <header>
@@ -17,9 +57,16 @@
 
 <main>
   <h1>Gallery</h1>
-  <p>Placeholder for now — you’ll add photos here later.</p>
-  <div class="card">
-    <p class="badge">Coming soon</p>
+  <p>Some recent work. More sets coming soon.</p>
+
+  <div class="galleryWrap">
+    <div class="galleryCard">
+      <img src="images/gallery-1.jpeg" alt="Pink and cream sculpted nail set with floral details" />
+      <div class="galleryInfo">
+        <h3>Floral pink sculpted set</h3>
+        <p>3D floral details, soft cream accents, and hand-painted pink marbling.</p>
+      </div>
+    </div>
   </div>
 </main>
 </body>
