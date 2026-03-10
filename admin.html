@@ -3,8 +3,132 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b0b10">
   <title>Axani Nails — Admin</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .adminTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .adminTopActions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .adminGrid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .requestCard {
+      background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(18,18,32,0.92));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+    }
+
+    .requestHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .requestHeader h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .metaGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .metaItem {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .metaLabel {
+      display: block;
+      font-size: 12px;
+      color: #b9b9cc;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .metaValue {
+      font-size: 14px;
+      color: #f5f5fb;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .requestActions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .denyBtn {
+      background: rgba(255,255,255,0.04);
+      color: #f5f5fb;
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: none;
+    }
+
+    .denyBtn:hover {
+      border-color: rgba(255,143,199,0.35);
+    }
+
+    .emptyState {
+      text-align: center;
+      padding: 36px 20px;
+      color: #b9b9cc;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .statusPill {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,143,199,0.30);
+      background: rgba(255,143,199,0.10);
+      color: #ffb3da;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .loadingBox {
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      color: #b9b9cc;
+    }
+  </style>
 </head>
 <body>
 <header>
@@ -12,16 +136,248 @@
     <a href="index.html">Booking</a>
     <a href="gallery.html">Gallery</a>
     <a href="policies.html">Policies</a>
-    <a class="active" href="admin.html">Admin</a>
   </nav>
 </header>
 
 <main>
-  <h1>Admin</h1>
-  <div class="card">
-    <p><b>Next step:</b> We’ll connect your Case A login and show PENDING bookings here.</p>
-    <p>For now, approve/deny directly in your Google Sheet by changing status.</p>
+  <div class="adminTop">
+    <div>
+      <h1 style="margin:0 0 6px 0;">Admin Dashboard</h1>
+      <p style="margin:0; color:#b9b9cc;">Review pending booking requests and approve or deny them.</p>
+    </div>
+
+    <div class="adminTopActions">
+      <button class="secondary" id="refreshBtn">Refresh</button>
+      <button class="secondary" id="logoutBtn">Log out</button>
+    </div>
   </div>
+
+  <div id="loadingBox" class="loadingBox">Loading pending requests...</div>
+
+  <div id="emptyState" class="requestCard emptyState hidden">
+    <p style="margin:0 0 8px 0; font-size:1.05rem; color:#f5f5fb;">No pending requests</p>
+    <p style="margin:0;">When someone submits a booking request, it will show up here.</p>
+  </div>
+
+  <section id="requestsContainer" class="adminGrid"></section>
 </main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8UBWKpYgbqdRJouFH3ESdelrEt4BesAPm35MP7aI4Gz5rZg7RzgbTBTYafPSJswnH/exec";
+  const TOKEN_KEY = "axaniAdminToken";
+
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3500);
+  }
+
+  function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  function requireLogin() {
+    const token = getToken();
+    if (!token) {
+      window.location.href = "login.html";
+      return null;
+    }
+    return token;
+  }
+
+  function logout() {
+    localStorage.removeItem("axaniAdminToken");
+    localStorage.removeItem("axaniAdminUser");
+    window.location.href = "login.html";
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    }).format(d);
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  async function fetchPendingBookings() {
+    const token = requireLogin();
+    if (!token) return;
+
+    const loadingBox = document.getElementById("loadingBox");
+    const container = document.getElementById("requestsContainer");
+    const emptyState = document.getElementById("emptyState");
+
+    loadingBox.classList.remove("hidden");
+    container.innerHTML = "";
+    emptyState.classList.add("hidden");
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "getPendingBookings",
+          token
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || "Failed to load requests");
+      }
+
+      const bookings = data.bookings || [];
+
+      if (bookings.length === 0) {
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      container.innerHTML = bookings.map(renderCard).join("");
+      bindActionButtons();
+
+    } catch (err) {
+      console.error(err);
+      toast("Could not load pending requests.");
+      if (String(err.message || "").toLowerCase().includes("unauthorized")) {
+        logout();
+      }
+    } finally {
+      loadingBox.classList.add("hidden");
+    }
+  }
+
+  function renderCard(booking) {
+    const startText = formatDateTime(booking.start);
+    const endText = formatDateTime(booking.end);
+
+    return `
+      <article class="requestCard" data-row="${booking.row}">
+        <div class="requestHeader">
+          <div>
+            <h2>${escapeHtml(booking.name || "Unnamed request")}</h2>
+            <div style="height:6px;"></div>
+            <span class="statusPill">Pending review</span>
+          </div>
+          <div class="badge">Row ${escapeHtml(booking.row)}</div>
+        </div>
+
+        <div class="metaGrid">
+          <div class="metaItem">
+            <span class="metaLabel">Email</span>
+            <div class="metaValue">${escapeHtml(booking.email || "—")}</div>
+          </div>
+
+          <div class="metaItem">
+            <span class="metaLabel">Service</span>
+            <div class="metaValue">${escapeHtml(booking.service || "—")}</div>
+          </div>
+
+          <div class="metaItem">
+            <span class="metaLabel">Requested start</span>
+            <div class="metaValue">${escapeHtml(startText)}</div>
+          </div>
+
+          <div class="metaItem">
+            <span class="metaLabel">Requested end</span>
+            <div class="metaValue">${escapeHtml(endText)}</div>
+          </div>
+
+          <div class="metaItem" style="grid-column: 1 / -1;">
+            <span class="metaLabel">Notes</span>
+            <div class="metaValue">${escapeHtml(booking.notes || "No notes provided.")}</div>
+          </div>
+        </div>
+
+        <div class="requestActions">
+          <button class="approveBtn" data-row="${booking.row}" data-status="APPROVED">Approve</button>
+          <button class="denyBtn" data-row="${booking.row}" data-status="DENIED">Deny</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function bindActionButtons() {
+    document.querySelectorAll("[data-status]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const row = Number(btn.dataset.row);
+        const status = btn.dataset.status;
+        await updateBookingStatus(row, status, btn);
+      });
+    });
+  }
+
+  async function updateBookingStatus(row, status, clickedBtn) {
+    const token = requireLogin();
+    if (!token) return;
+
+    const card = document.querySelector(`.requestCard[data-row="${row}"]`);
+    const buttons = card ? card.querySelectorAll("button") : [];
+    buttons.forEach(b => b.disabled = true);
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "updateBookingStatus",
+          token,
+          row,
+          status
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || "Update failed");
+      }
+
+      if (card) {
+        card.remove();
+      }
+
+      const remaining = document.querySelectorAll(".requestCard").length;
+      if (remaining === 0) {
+        document.getElementById("emptyState").classList.remove("hidden");
+      }
+
+      toast(status === "APPROVED" ? "Booking approved." : "Booking denied.");
+
+    } catch (err) {
+      console.error(err);
+      toast("Could not update booking.");
+      if (String(err.message || "").toLowerCase().includes("unauthorized")) {
+        logout();
+      }
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+  document.getElementById("refreshBtn").addEventListener("click", fetchPendingBookings);
+
+  requireLogin();
+  fetchPendingBookings();
+</script>
 </body>
 </html>
