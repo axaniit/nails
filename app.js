@@ -27,6 +27,13 @@ function fmt(dt) {
   }).format(new Date(dt));
 }
 
+function fmtTime(dt) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(dt));
+}
+
 function syncSelectedSlotToHidden() {
   const slotSelect = document.getElementById("slotSelect");
   const idx = Number(slotSelect.value || 0);
@@ -66,9 +73,11 @@ function initCalendar() {
 
   const events = allSlots.map((slot, idx) => ({
     id: String(idx),
-    title: "Available",
     start: slot.start,
-    end: slot.end
+    end: slot.end,
+    extendedProps: {
+      rangeLabel: `${fmtTime(slot.start)} — ${fmtTime(slot.end)}`
+    }
   }));
 
   const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -84,6 +93,11 @@ function initCalendar() {
       document.getElementById("slotSelect").value = String(idx);
       syncSelectedSlotToHidden();
       openModal("bookingModal");
+    },
+    eventContent(arg) {
+      const wrapper = document.createElement("div");
+      wrapper.textContent = arg.event.extendedProps.rangeLabel || "";
+      return { domNodes: [wrapper] };
     }
   });
 
@@ -152,7 +166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       openModal("submittedModal");
       e.target.reset();
       addressOtherWrap.style.display = "none";
-      toast("Request received! Approval required to confirm.");
+      toast("Request received! Booking is not complete until approved and the deposit is paid.");
     } catch (err) {
       console.error(err);
       toast("Something went wrong submitting your request.");
