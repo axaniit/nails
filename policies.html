@@ -1,10 +1,43 @@
-<!doctype html>
+<<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b0b10">
   <title>Axani Nails — Policies</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .policyGrid {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .policyCard {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.20);
+    }
+
+    .policyCard h2 {
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+    }
+
+    .policyCard p {
+      margin: 0;
+      color: #d7d7e7;
+      line-height: 1.55;
+    }
+
+    .policyNote {
+      margin-top: 20px;
+      color: #b9b9cc;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
 <header>
@@ -17,15 +50,82 @@
 
 <main>
   <h1>Policies</h1>
-  <div class="card">
-    <p><b>Placeholder</b> — you’ll tell me what to put here later.</p>
-    <ul>
-      <li>Late policy</li>
-      <li>Cancellation policy</li>
-      <li>Deposit policy (if you add one)</li>
-      <li>Aftercare</li>
-    </ul>
+  <p>Please read before booking.</p>
+
+  <div class="policyGrid">
+    <section class="policyCard">
+      <h2>Booking confirmation + deposit</h2>
+      <p>
+        Appointments are not confirmed until I have both approved the request and received the $5 deposit.
+        Submitting a booking request does not automatically reserve your spot.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>Pricing</h2>
+      <p>
+        Gel sets are $10 total. Acrylic sets are $15 total. If a design is especially complex or requires me
+        to learn a new technique or buy something extra, there may be an additional $5 charge. The deposit
+        is included in the total price. For example, if you book an acrylic appointment and send the $5 deposit,
+        you would owe $10 at the appointment if there is no added complexity charge.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>Late arrivals</h2>
+      <p>
+        If you arrive too late, we may need to reschedule your appointment. If you are more than 20 minutes late,
+        your deposit can be carried over to one rescheduled appointment instead of being lost.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>Rescheduling + cancellations</h2>
+      <p>
+        If you need to reschedule and give at least 24 hours’ notice, your deposit can be applied to your new
+        appointment. Same-day cancellations and last-minute reschedules will result in the deposit being forfeited.
+        Deposits are otherwise nonrefundable.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>No-shows</h2>
+      <p>
+        If you miss your appointment without communicating, the deposit will be forfeited. I may still be willing
+        to reschedule, but a new deposit may be required.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>Location</h2>
+      <p>
+        Enter your preferred location when booking, whether that is my place or somewhere else, and I’ll follow
+        up with you about what works best.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>Materials</h2>
+      <p>
+        I have limited materials on hand. If you want something specific, like certain charms, decals, or a very
+        particular color, you are responsible for purchasing it and bringing it to the appointment. Otherwise,
+        you will need to choose from the materials I already have available.
+      </p>
+    </section>
+
+    <section class="policyCard">
+      <h2>Fills</h2>
+      <p>
+        I offer fills for up to 5 nails or within 2 weeks of your original appointment for 50% of the price you
+        originally paid. Fill appointments do not require a deposit if the remaining amount due for the fill is
+        $5 or less.
+      </p>
+    </section>
   </div>
+
+  <p class="policyNote">
+    Additional policies may be added later as needed.
+  </p>
 </main>
 </body>
 </html>
