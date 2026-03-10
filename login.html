@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b0b10">
+  <title>Axani Nails — Admin Login</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .loginWrap {
+      min-height: calc(100vh - 90px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .loginCard {
+      width: 100%;
+      max-width: 460px;
+      background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(18,18,32,0.92));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    }
+
+    .loginTitle {
+      margin: 0 0 8px 0;
+      font-size: 1.9rem;
+    }
+
+    .loginSub {
+      margin: 0 0 18px 0;
+      color: #b9b9cc;
+      line-height: 1.5;
+    }
+
+    .loginBrand {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,143,199,0.30);
+      background: rgba(255,143,199,0.10);
+      color: #ffb3da;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .errorBox {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,91,107,0.35);
+      background: rgba(255,91,107,0.10);
+      color: #ffd7dc;
+      font-size: 14px;
+    }
+
+    .errorBox.show {
+      display: block;
+    }
+
+    .helperRow {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #b9b9cc;
+    }
+
+    .helperRow a {
+      color: #ffb3da;
+      text-decoration: none;
+    }
+
+    .helperRow a:hover {
+      color: #ff8fc7;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <nav>
+    <a href="index.html">Booking</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="policies.html">Policies</a>
+  </nav>
+</header>
+
+<main class="loginWrap">
+  <section class="loginCard">
+    <span class="loginBrand">Admin Access</span>
+    <h1 class="loginTitle">Sign in</h1>
+    <p class="loginSub">Enter your admin credentials to review and approve booking requests.</p>
+
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input id="username" name="username" autocomplete="username" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+      <div style="height: 16px;"></div>
+      <button id="loginBtn" type="submit">Log in</button>
+
+      <div id="errorBox" class="errorBox"></div>
+
+      <div class="helperRow">
+        <a href="index.html">← Back to booking site</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8UBWKpYgbqdRJouFH3ESdelrEt4BesAPm35MP7aI4Gz5rZg7RzgbTBTYafPSJswnH/exec";
+
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3500);
+  }
+
+  function showError(msg) {
+    const box = document.getElementById("errorBox");
+    box.textContent = msg;
+    box.classList.add("show");
+  }
+
+  function clearError() {
+    document.getElementById("errorBox").classList.remove("show");
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError();
+
+    const btn = document.getElementById("loginBtn");
+    btn.disabled = true;
+
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "adminLogin",
+          username,
+          password
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      if (!data.token) {
+        throw new Error("No login token returned");
+      }
+
+      localStorage.setItem("axaniAdminToken", data.token);
+      localStorage.setItem("axaniAdminUser", username);
+
+      toast("Login successful");
+      window.location.href = "admin.html";
+    } catch (err) {
+      console.error(err);
+      showError("Incorrect username or password.");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
