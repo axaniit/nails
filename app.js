@@ -1,7 +1,8 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8UBWKpYgbqdRJouFH3ESdelrEt4BesAPm35MP7aI4Gz5rZg7RzgbTBTYafPSJswnH/exec";
 
 let allSlots = [];
-let calendar;
+let calendar = null;
+let selectedCalendarSlotIndex = null;
 
 function toast(msg) {
   const t = document.getElementById("toast");
@@ -38,42 +39,30 @@ function fmtTime(dt) {
   }).format(new Date(dt));
 }
 
-function syncSelectedSlotToHidden() {
-  const slotSelect = document.getElementById("slotSelect");
-  if (!slotSelect || !allSlots.length) return;
-
-  const idx = Number(slotSelect.value || 0);
-  const slot = allSlots[idx];
-  if (!slot) return;
-
-  document.getElementById("requestedStart").value = slot.start;
-  document.getElementById("requestedEnd").value = slot.end;
-  document.getElementById("selectedSlotText").textContent = `${fmt(slot.start)} — ${fmt(slot.end)}`;
-}
-
 async function loadAvailability() {
-  const res = await fetch(`${SCRIPT_URL}?action=getAvailability`, {
-    method: "GET"
-  });
-
+  const res = await fetch(`${SCRIPT_URL}?action=getAvailability`);
   const data = await res.json();
-  if (!data.ok) throw new Error(data.error || "Failed to load availability");
+
+  if (!data.ok) {
+    throw new Error(data.error || "Failed to load availability");
+  }
 
   allSlots = Array.isArray(data.slots) ? data.slots : [];
   return allSlots;
 }
 
-function populateSlotDropdown() {
-  const slotSelect = document.getElementById("slotSelect");
-  if (!slotSelect) return;
+function populateInlineDropdown() {
+  const select = document.getElementById("inline_slotSelect");
+  if (!select) return;
 
-  slotSelect.innerHTML = "";
+  select.innerHTML = "";
 
   if (!allSlots.length) {
     const opt = document.createElement("option");
     opt.value = "";
     opt.textContent = "No available slots right now";
-    slotSelect.appendChild(opt);
+    select.appendChild(opt);
+    updateInlineSelectedSlot();
     return;
   }
 
@@ -81,13 +70,47 @@ function populateSlotDropdown() {
     const opt = document.createElement("option");
     opt.value = String(idx);
     opt.textContent = `${fmt(slot.start)} — ${fmt(slot.end)}`;
-    slotSelect.appendChild(opt);
+    select.appendChild(opt);
   });
 
-  syncSelectedSlotToHidden();
+  updateInlineSelectedSlot();
 }
 
-function initCalendarShell() {
+function updateInlineSelectedSlot() {
+  const select = document.getElementById("inline_slotSelect");
+  const chip = document.getElementById("inlineSelectedSlot");
+  const startInput = document.getElementById("inline_requestedStart");
+  const endInput = document.getElementById("inline_requestedEnd");
+
+  if (!select || !chip || !startInput || !endInput) return;
+
+  const idx = Number(select.value || 0);
+  const slot = allSlots[idx];
+
+  if (!slot) {
+    chip.textContent = "Choose a slot above";
+    startInput.value = "";
+    endInput.value = "";
+    return;
+  }
+
+  chip.textContent = `${fmt(slot.start)} — ${fmt(slot.end)}`;
+  startInput.value = slot.start;
+  endInput.value = slot.end;
+}
+
+function setPopupSlot(idx) {
+  const slot = allSlots[idx];
+  if (!slot) return;
+
+  selectedCalendarSlotIndex = idx;
+
+  document.getElementById("popup_requestedStart").value = slot.start;
+  document.getElementById("popup_requestedEnd").value = slot.end;
+  document.getElementById("popupSelectedSlot").textContent = `${fmt(slot.start)} — ${fmt(slot.end)}`;
+}
+
+function initCalendar() {
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) return;
 
@@ -99,14 +122,15 @@ function initCalendarShell() {
       center: "title",
       right: "dayGridMonth,timeGridWeek,timeGridDay"
     },
+    events: allSlots.map((slot, idx) => ({
+      id: String(idx),
+      start: slot.start,
+      end: slot.end
+    })),
     eventClick(info) {
       const idx = Number(info.event.id);
-      const slotSelect = document.getElementById("slotSelect");
-      if (!slotSelect) return;
-
-      slotSelect.value = String(idx);
-      syncSelectedSlotToHidden();
-      openModal("bookingModal");
+      setPopupSlot(idx);
+      openSlotPopup();
     },
     eventContent(arg) {
       const wrapper = document.createElement("div");
@@ -114,136 +138,152 @@ function initCalendarShell() {
       const end = arg.event.end;
       wrapper.textContent = `${fmtTime(start)} — ${fmtTime(end)}`;
       return { domNodes: [wrapper] };
-    },
-    events: []
+    }
   });
 
   calendar.render();
-}
-
-function injectCalendarEvents() {
-  if (!calendar) return;
-
-  calendar.removeAllEvents();
-
-  const events = allSlots.map((slot, idx) => ({
-    id: String(idx),
-    start: slot.start,
-    end: slot.end
-  }));
-
-  events.forEach(evt => calendar.addEvent(evt));
 
   const emptyNote = document.getElementById("emptyCalendarNote");
   if (emptyNote) {
-    emptyNote.style.display = events.length ? "none" : "block";
+    emptyNote.style.display = allSlots.length ? "none" : "block";
   }
 }
 
-function bindModalControls() {
-  document.querySelectorAll("[data-close]").forEach(el => {
-    el.addEventListener("click", () => closeModal(el.dataset.close));
+function refreshCalendarEvents() {
+  if (!calendar) return;
+
+  calendar.removeAllEvents();
+  allSlots.forEach((slot, idx) => {
+    calendar.addEvent({
+      id: String(idx),
+      start: slot.start,
+      end: slot.end
+    });
+  });
+
+  const emptyNote = document.getElementById("emptyCalendarNote");
+  if (emptyNote) {
+    emptyNote.style.display = allSlots.length ? "none" : "block";
+  }
+}
+
+function openSlotPopup() {
+  document.getElementById("slotPopupBackdrop")?.classList.add("show");
+}
+
+function closeSlotPopup() {
+  document.getElementById("slotPopupBackdrop")?.classList.remove("show");
+}
+
+function bindAddressToggle(selectId, wrapId) {
+  const select = document.getElementById(selectId);
+  const wrap = document.getElementById(wrapId);
+  if (!select || !wrap) return;
+
+  select.addEventListener("change", () => {
+    wrap.style.display = select.value === "other" ? "block" : "none";
   });
 }
 
-function bindBookingControls() {
-  const slotSelect = document.getElementById("slotSelect");
-  const openBookingBtn = document.getElementById("openBookingBtn");
-  const addressType = document.getElementById("addressType");
-  const addressOtherWrap = document.getElementById("addressOtherWrap");
-  const form = document.getElementById("bookingForm");
+async function submitBookingForm(form, submitBtn) {
+  const fd = new FormData(form);
 
-  if (slotSelect) {
-    slotSelect.addEventListener("change", syncSelectedSlotToHidden);
-  }
+  const payload = {
+    action: "createBooking",
+    preferred_name: fd.get("preferred_name"),
+    client_email: fd.get("client_email"),
+    client_phone: fd.get("client_phone"),
+    service: fd.get("service"),
+    requested_start: fd.get("requested_start"),
+    requested_end: fd.get("requested_end"),
+    address_type: fd.get("address_type"),
+    address_text: fd.get("address_text"),
+    notes: fd.get("notes"),
+    inspo_file_url: ""
+  };
 
-  if (openBookingBtn) {
-    openBookingBtn.addEventListener("click", () => {
-      if (!allSlots.length) {
-        toast("There are no available slots showing right now.");
-        return;
-      }
-      syncSelectedSlotToHidden();
-      openModal("bookingModal");
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
     });
-  }
 
-  if (addressType && addressOtherWrap) {
-    addressType.addEventListener("change", () => {
-      addressOtherWrap.style.display = addressType.value === "other" ? "block" : "none";
-    });
-  }
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Request failed");
 
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    form.reset();
 
-      if (!allSlots.length) {
-        toast("There are no available slots to request right now.");
-        return;
-      }
+    if (form.id === "popupBookingForm") {
+      document.getElementById("popup_addressOtherWrap").style.display = "none";
+      closeSlotPopup();
+    } else if (form.id === "inlineBookingForm") {
+      document.getElementById("inline_addressOtherWrap").style.display = "none";
+    }
 
-      syncSelectedSlotToHidden();
-
-      const btn = document.getElementById("submitBtn");
-      btn.disabled = true;
-
-      try {
-        const fd = new FormData(form);
-
-        const payload = {
-          action: "createBooking",
-          preferred_name: fd.get("preferred_name"),
-          client_email: fd.get("client_email"),
-          client_phone: fd.get("client_phone"),
-          service: fd.get("service"),
-          requested_start: fd.get("requested_start"),
-          requested_end: fd.get("requested_end"),
-          address_type: fd.get("address_type"),
-          address_text: fd.get("address_text"),
-          notes: fd.get("notes"),
-          inspo_file_url: ""
-        };
-
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "Request failed");
-
-        closeModal("bookingModal");
-        openModal("submittedModal");
-        form.reset();
-        if (addressOtherWrap) addressOtherWrap.style.display = "none";
-        toast("Request received! Booking is not complete until approved and your deposit is paid.");
-      } catch (err) {
-        console.error(err);
-        toast("Something went wrong submitting your request.");
-      } finally {
-        btn.disabled = false;
-      }
-    });
+    openModal("submittedModal");
+    toast("Request received! Booking is not complete until approved and your deposit is paid.");
+  } catch (err) {
+    console.error(err);
+    toast("Something went wrong submitting your request.");
+  } finally {
+    submitBtn.disabled = false;
   }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!document.getElementById("calendar")) return;
 
-  initCalendarShell();
-  bindModalControls();
-  bindBookingControls();
+  document.querySelectorAll("[data-close]").forEach(el => {
+    el.addEventListener("click", () => closeModal(el.dataset.close));
+  });
+
+  bindAddressToggle("inline_addressType", "inline_addressOtherWrap");
+  bindAddressToggle("popup_addressType", "popup_addressOtherWrap");
+
+  document.getElementById("slotPopupClose")?.addEventListener("click", closeSlotPopup);
+  document.getElementById("popupCloseBtn")?.addEventListener("click", closeSlotPopup);
+
+  document.getElementById("slotPopupBackdrop")?.addEventListener("click", (e) => {
+    if (e.target.id === "slotPopupBackdrop") closeSlotPopup();
+  });
+
+  document.getElementById("loadIntoFormBtn")?.addEventListener("click", () => {
+    if (selectedCalendarSlotIndex == null) return;
+
+    const inlineSelect = document.getElementById("inline_slotSelect");
+    if (inlineSelect) {
+      inlineSelect.value = String(selectedCalendarSlotIndex);
+      updateInlineSelectedSlot();
+      document.getElementById("inlineBookingForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    closeSlotPopup();
+  });
+
+  document.getElementById("inline_slotSelect")?.addEventListener("change", updateInlineSelectedSlot);
+
+  document.getElementById("inlineBookingForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await submitBookingForm(e.currentTarget, document.getElementById("inlineSubmitBtn"));
+  });
+
+  document.getElementById("popupBookingForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await submitBookingForm(e.currentTarget, document.getElementById("popupSubmitBtn"));
+  });
 
   try {
     await loadAvailability();
-    populateSlotDropdown();
-    injectCalendarEvents();
+    populateInlineDropdown();
+    initCalendar();
   } catch (err) {
     console.error(err);
-    populateSlotDropdown();
-    injectCalendarEvents();
+    populateInlineDropdown();
+    initCalendar();
+    refreshCalendarEvents();
     toast("Could not load availability from the sheet.");
   }
 });
