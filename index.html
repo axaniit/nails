@@ -8,31 +8,33 @@
   <link rel="stylesheet" href="styles.css" />
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
   <style>
-    #calendarWrap {
-      margin-top: 18px;
+    .booking-grid{
+      display:grid;
+      gap:18px;
+      margin-top:18px;
     }
 
-    #calendar {
+    .booking-card{
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.10);
       border-radius: 18px;
-      padding: 14px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.20);
+      overflow: hidden;
+    }
+
+    .booking-card-h{
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .booking-card-b{
+      padding: 18px;
+    }
+
+    #calendar{
       min-height: 760px;
-    }
-
-    .bookingTop {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
-
-    .bookingActions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
     }
 
     .fc {
@@ -96,17 +98,99 @@
       white-space: normal;
     }
 
-    .calendarHint {
-      color: #b9b9cc;
-      font-size: 14px;
-      line-height: 1.5;
-      margin-top: 8px;
+    .form-grid{
+      display:grid;
+      gap:12px;
     }
 
-    .emptyCalendarNote {
-      margin-top: 14px;
-      color: #b9b9cc;
-      font-size: 14px;
+    .helper{
+      color:#b9b9cc;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .inline-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .selected-slot-chip{
+      display:inline-block;
+      margin-top:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,143,199,0.30);
+      background: rgba(255,143,199,0.10);
+      color:#ffb3da;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .slot-popup-backdrop{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      z-index:9998;
+      padding:18px;
+      overflow:auto;
+    }
+
+    .slot-popup-backdrop.show{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .slot-popup{
+      width:min(520px, 100%);
+      background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(18,18,32,0.92));
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      box-shadow:0 30px 80px rgba(0,0,0,0.45);
+      overflow:hidden;
+    }
+
+    .slot-popup-h{
+      padding:14px 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .slot-popup-h h2{
+      margin:0;
+      font-size:1.05rem;
+    }
+
+    .slot-popup-b{
+      padding:18px;
+    }
+
+    .slot-popup-f{
+      padding:14px 18px 18px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .close-x{
+      background:transparent;
+      border:0;
+      color:#f5f5fb;
+      font-size:22px;
+      cursor:pointer;
+      box-shadow:none;
+      padding:0;
+    }
+
+    .close-x:hover{
+      color:#ffb3da;
+      transform:none;
     }
   </style>
 </head>
@@ -120,81 +204,134 @@
 </header>
 
 <main>
-  <div class="bookingTop">
-    <div>
-      <h1>Axani Nails</h1>
-      <p>Choose a slot from the calendar or request one through the dropdown form. <b>Bookings are not confirmed until approved and the deposit is paid.</b></p>
-      <p class="calendarHint">Click any available time on the calendar to load it into the request form automatically.</p>
-    </div>
+  <h1>Axani Nails</h1>
+  <p>Book directly from the calendar, or use the request form below to choose a slot from the dropdown. <b>Bookings are not confirmed until approved and the deposit is paid.</b></p>
 
-    <div class="bookingActions">
-      <button id="openBookingBtn" type="button">Request by dropdown</button>
-    </div>
-  </div>
+  <div class="booking-grid">
+    <section class="booking-card">
+      <div class="booking-card-h">Calendar Booking</div>
+      <div class="booking-card-b">
+        <p class="helper">Click an available slot to open a booking popup for that specific time.</p>
+        <div id="calendar"></div>
+        <p id="emptyCalendarNote" class="helper" style="display:none; margin-top:14px;">
+          No availability is showing right now. Add rows in your <b>AVAILABILITY</b> sheet and mark them TRUE.
+        </p>
+      </div>
+    </section>
 
-  <div class="card" id="calendarWrap">
-    <div id="calendar"></div>
-    <p id="emptyCalendarNote" class="emptyCalendarNote" style="display:none;">
-      No availability is showing right now. Add slots in your Google Sheet under the <b>AVAILABILITY</b> tab.
-    </p>
+    <section class="booking-card">
+      <div class="booking-card-h">Request by Dropdown</div>
+      <div class="booking-card-b">
+        <p class="helper">This is the alternate booking option. Choose a slot from the dropdown and submit your request here.</p>
+        <form id="inlineBookingForm" class="form-grid">
+          <label for="inline_slotSelect">Choose a time *</label>
+          <select id="inline_slotSelect" required></select>
+
+          <div id="inlineSelectedSlot" class="selected-slot-chip">Choose a slot above</div>
+
+          <input type="hidden" id="inline_requestedStart" name="requested_start" />
+          <input type="hidden" id="inline_requestedEnd" name="requested_end" />
+
+          <label for="inline_preferred_name">Preferred name *</label>
+          <input id="inline_preferred_name" name="preferred_name" required />
+
+          <label for="inline_client_email">Email *</label>
+          <input id="inline_client_email" name="client_email" type="email" required />
+
+          <label for="inline_client_phone">Phone (optional)</label>
+          <input id="inline_client_phone" name="client_phone" type="tel" />
+
+          <label for="inline_service">Service *</label>
+          <select id="inline_service" name="service" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="acrylic">acrylic</option>
+            <option value="gel">gel</option>
+          </select>
+
+          <label for="inline_addressType">Preferred address *</label>
+          <select id="inline_addressType" name="address_type" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="on campus">on campus</option>
+            <option value="other">other</option>
+          </select>
+
+          <div id="inline_addressOtherWrap" style="display:none;">
+            <label for="inline_address_text">Address</label>
+            <input id="inline_address_text" name="address_text" placeholder="Street, City, State" />
+          </div>
+
+          <label for="inline_inspo_file">Inspo picture (optional)</label>
+          <input id="inline_inspo_file" name="inspo_file" type="file" accept="image/*" />
+
+          <label for="inline_notes">Notes (optional)</label>
+          <textarea id="inline_notes" name="notes" rows="4"></textarea>
+
+          <div class="inline-actions">
+            <button id="inlineSubmitBtn" type="submit">Submit request</button>
+          </div>
+        </form>
+      </div>
+    </section>
   </div>
 </main>
 
-<!-- BOOKING MODAL -->
-<div id="bookingModal" class="modalBackdrop">
-  <div class="modal">
-    <div class="modalHeader">
-      <h2>Booking Request</h2>
-      <button class="secondary" type="button" data-close="bookingModal">Close</button>
+<!-- CALENDAR CLICK BOOKING POPUP -->
+<div id="slotPopupBackdrop" class="slot-popup-backdrop">
+  <div class="slot-popup">
+    <div class="slot-popup-h">
+      <h2>Book This Slot</h2>
+      <button class="close-x" type="button" id="slotPopupClose">×</button>
     </div>
 
-    <p><small>Selected: <span id="selectedSlotText">Choose a time below</span></small></p>
+    <div class="slot-popup-b">
+      <p class="helper">Selected slot:</p>
+      <div id="popupSelectedSlot" class="selected-slot-chip" style="margin-bottom:14px;">—</div>
 
-    <form id="bookingForm">
-      <label for="slotSelect">Choose a time *</label>
-      <select id="slotSelect" required></select>
+      <form id="popupBookingForm" class="form-grid">
+        <input type="hidden" id="popup_requestedStart" name="requested_start" />
+        <input type="hidden" id="popup_requestedEnd" name="requested_end" />
 
-      <input type="hidden" name="requested_start" id="requestedStart" />
-      <input type="hidden" name="requested_end" id="requestedEnd" />
+        <label for="popup_preferred_name">Preferred name *</label>
+        <input id="popup_preferred_name" name="preferred_name" required />
 
-      <label for="preferred_name">Preferred name *</label>
-      <input id="preferred_name" name="preferred_name" required />
+        <label for="popup_client_email">Email *</label>
+        <input id="popup_client_email" name="client_email" type="email" required />
 
-      <label for="client_email">Email *</label>
-      <input id="client_email" name="client_email" type="email" required />
+        <label for="popup_client_phone">Phone (optional)</label>
+        <input id="popup_client_phone" name="client_phone" type="tel" />
 
-      <label for="client_phone">Phone (optional)</label>
-      <input id="client_phone" name="client_phone" type="tel" />
+        <label for="popup_service">Service *</label>
+        <select id="popup_service" name="service" required>
+          <option value="" disabled selected>Select…</option>
+          <option value="acrylic">acrylic</option>
+          <option value="gel">gel</option>
+        </select>
 
-      <label for="service">Service *</label>
-      <select id="service" name="service" required>
-        <option value="" disabled selected>Select…</option>
-        <option value="acrylic">acrylic</option>
-        <option value="gel">gel</option>
-      </select>
+        <label for="popup_addressType">Preferred address *</label>
+        <select id="popup_addressType" name="address_type" required>
+          <option value="" disabled selected>Select…</option>
+          <option value="on campus">on campus</option>
+          <option value="other">other</option>
+        </select>
 
-      <label for="addressType">Preferred address *</label>
-      <select id="addressType" name="address_type" required>
-        <option value="" disabled selected>Select…</option>
-        <option value="on campus">on campus</option>
-        <option value="other">other</option>
-      </select>
+        <div id="popup_addressOtherWrap" style="display:none;">
+          <label for="popup_address_text">Address</label>
+          <input id="popup_address_text" name="address_text" placeholder="Street, City, State" />
+        </div>
 
-      <div id="addressOtherWrap" style="display:none;">
-        <label for="address_text">Address</label>
-        <input id="address_text" name="address_text" placeholder="Street, City, State" />
-      </div>
+        <label for="popup_inspo_file">Inspo picture (optional)</label>
+        <input id="popup_inspo_file" name="inspo_file" type="file" accept="image/*" />
 
-      <label for="inspo_file">Inspo picture (optional)</label>
-      <input id="inspo_file" name="inspo_file" type="file" accept="image/*" />
+        <label for="popup_notes">Notes (optional)</label>
+        <textarea id="popup_notes" name="notes" rows="4"></textarea>
+      </form>
+    </div>
 
-      <label for="notes">Notes (optional)</label>
-      <textarea id="notes" name="notes" rows="4"></textarea>
-
-      <div style="height:12px;"></div>
-      <button id="submitBtn" type="submit">Submit request</button>
-      <p><small>Submitting a request does not guarantee a booking.</small></p>
-    </form>
+    <div class="slot-popup-f">
+      <button id="popupSubmitBtn" type="submit" form="popupBookingForm">Book This Slot</button>
+      <button id="loadIntoFormBtn" type="button" class="secondary">Load into Form Below</button>
+      <button id="popupCloseBtn" type="button" class="secondary">Close</button>
+    </div>
   </div>
 </div>
 
