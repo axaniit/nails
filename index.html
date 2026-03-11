@@ -14,6 +14,12 @@
       margin-top:18px;
     }
 
+    .booking-intro{
+      max-width:760px;
+      line-height:1.7;
+      margin:0 0 18px 0;
+    }
+
     .booking-card{
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.10);
@@ -77,11 +83,16 @@
     }
 
     .fc-daygrid-day-number,
-    .fc-col-header-cell-cushion,
     .fc-timegrid-slot-label-cushion,
     .fc-timegrid-axis-cushion {
       color: #f5f5fb;
       text-decoration: none;
+    }
+
+    .fc-col-header-cell-cushion {
+      color: #ffd9ec;
+      text-decoration: none;
+      font-weight: 700;
     }
 
     .fc-event {
@@ -205,7 +216,11 @@
 
 <main>
   <h1>Axani Nails</h1>
-  <p>Book directly from the calendar, or use the request form below to choose a slot from the dropdown. <b>Bookings are not confirmed until approved and the deposit is paid.</b></p>
+  <p class="booking-intro">
+    Book directly from the calendar, or use the request form below to choose a slot from the dropdown.
+    <br><br>
+    <b>Bookings are not confirmed until approved and the deposit is paid.</b>
+  </p>
 
   <div class="booking-grid">
     <section class="booking-card">
