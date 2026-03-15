@@ -405,6 +405,1017 @@ Book directly from the calendar, or use the request form below to choose a slot 
 
       <label for="inline_slotSelect">Choose a time block *</label>
       <select id="inline_slotSelect" required>
+        <option value="" disabled selected data-placeholder="1">Choose a slot</option>
+      </select>
+
+      <div id="inlineSelectedSlot" class="selected-slot-chip">
+        Choose a slot above
+      </div>
+
+      <input type="hidden" id="inline_requestedStart" name="requested_start" />
+      <input type="hidden" id="inline_requestedEnd" name="requested_end" />
+
+      <div class="two-col">
+        <div>
+          <label for="inline_preferredTimeStart">Preferred start time *</label>
+          <input id="inline_preferredTimeStart" name="preferred_time_start" type="time" required />
+        </div>
+        <div>
+          <label for="inline_preferredTimeEnd">Preferred end time *</label>
+          <input id="inline_preferredTimeEnd" name="preferred_time_end" type="time" required />
+        </div>
+      </div>
+
+      <label for="inline_preferred_name">Preferred name *</label>
+      <input id="inline_preferred_name" name="preferred_name" required />
+
+      <label for="inline_client_email">Email *</label>
+      <input id="inline_client_email" name="client_email" type="email" required />
+
+      <label for="inline_client_phone">Phone (optional)</label>
+      <input id="inline_client_phone" name="client_phone" type="tel" />
+
+      <label for="inline_service">Service *</label>
+      <select id="inline_service" name="service" required>
+        <option value="" disabled selected>Select…</option>
+        <option value="acrylic">acrylic</option>
+        <option value="gel">gel</option>
+      </select>
+
+      <label for="inline_addressType">Preferred address *</label>
+      <select id="inline_addressType" name="address_type" required>
+        <option value="" disabled selected>Select…</option>
+        <option value="on campus">on campus</option>
+        <option value="other">other</option>
+      </select>
+
+      <div id="inline_addressOtherWrap" style="display:none;">
+        <label for="inline_address_text">Address</label>
+        <input id="inline_address_text" name="address_text" placeholder="Street, City, State" />
+      </div>
+
+      <label for="inline_inspo_file">Inspo picture (optional)</label>
+      <input id="inline_inspo_file" name="inspo_file" type="file" accept="image/*" />
+
+      <label for="inline_notes">Notes (optional)</label>
+      <textarea id="inline_notes" name="notes" rows="4" placeholder="Add any design notes here"></textarea>
+
+      <div class="inline-actions">
+        <button id="inlineSubmitBtn" type="submit">Submit request</button>
+      </div>
+    </form>
+
+  </div>
+</section>
+
+</div>
+
+</main>
+
+<div id="slotPopupBackdrop" class="slot-popup-backdrop" aria-hidden="true">
+  <div class="slot-popup" role="dialog" aria-modal="true" aria-labelledby="slotPopupTitle">
+    <div class="slot-popup-h">
+      <h2 id="slotPopupTitle">Book this slot</h2>
+      <button type="button" class="close-x" id="slotPopupX" aria-label="Close">×</button>
+    </div>
+
+    <div class="slot-popup-b">
+      <div id="popupSelectedSlot" class="popup-slot-chip">No slot selected</div>
+      <p class="slot-note">
+        Choose your preferred start and end time within this availability block.
+      </p>
+
+      <form id="popupBookingForm" class="form-grid">
+        <input type="hidden" id="popup_requestedStart" />
+        <input type="hidden" id="popup_requestedEnd" />
+
+        <div class="two-col">
+          <div>
+            <label for="popup_preferredTimeStart">Preferred start time *</label>
+            <input id="popup_preferredTimeStart" type="time" required />
+          </div>
+          <div>
+            <label for="popup_preferredTimeEnd">Preferred end time *</label>
+            <input id="popup_preferredTimeEnd" type="time" required />
+          </div>
+        </div>
+
+        <label for="popup_preferred_name">Preferred name *</label>
+        <input id="popup_preferred_name" required />
+
+        <label for="popup_client_email">Email *</label>
+        <input id="popup_client_email" type="email" required />
+
+        <label for="popup_client_phone">Phone (optional)</label>
+        <input id="popup_client_phone" type="tel" />
+
+        <label for="popup_service">Service *</label>
+        <select id="popup_service" required>
+          <option value="" disabled selected>Select…</option>
+          <option value="acrylic">acrylic</option>
+          <option value="gel">gel</option>
+        </select>
+
+        <label for="popup_addressType">Preferred address *</label>
+        <select id="popup_addressType" required>
+          <option value="" disabled selected>Select…</option>
+          <option value="on campus">on campus</option>
+          <option value="other">other</option>
+        </select>
+
+        <div id="popup_addressOtherWrap" style="display:none;">
+          <label for="popup_address_text">Address</label>
+          <input id="popup_address_text" placeholder="Street, City, State" />
+        </div>
+
+        <label for="popup_inspo_file">Inspo picture (optional)</label>
+        <input id="popup_inspo_file" type="file" accept="image/*" />
+
+        <label for="popup_notes">Notes (optional)</label>
+        <textarea id="popup_notes" rows="4" placeholder="Add any design notes here"></textarea>
+
+        <div class="popup-actions">
+          <button type="button" id="loadIntoFormBtn" class="secondary-btn">Load into form</button>
+          <button type="submit" id="popupSubmitBtn">Submit booking request</button>
+          <button type="button" id="slotPopupCloseBtn" class="secondary-btn">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="confirmPopupBackdrop" class="confirm-popup-backdrop" aria-hidden="true">
+  <div class="confirm-popup" role="dialog" aria-modal="true" aria-labelledby="confirmPopupTitle">
+    <div class="confirm-popup-h">
+      <h2 id="confirmPopupTitle">Request sent</h2>
+      <button type="button" class="close-x" id="confirmPopupX" aria-label="Close">×</button>
+    </div>
+
+    <div class="confirm-popup-b">
+      <div class="confirm-icon">✓</div>
+      <div class="confirm-text">
+        <strong>Booking received, waiting confirmation from Axani.</strong>
+        <br>
+        Your request has been submitted, but it is not confirmed until approval and deposit.
+      </div>
+    </div>
+
+    <div class="confirm-popup-f">
+      <button type="button" id="confirmPopupOk">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="infoPopupBackdrop" class="info-popup-backdrop" aria-hidden="true">
+  <div class="info-popup" role="dialog" aria-modal="true" aria-labelledby="infoPopupTitle">
+    <div class="info-popup-h">
+      <h2 id="infoPopupTitle">This slot cannot be booked</h2>
+      <button type="button" class="close-x" id="infoPopupX" aria-label="Close">×</button>
+    </div>
+
+    <div class="info-popup-b">
+      <div class="confirm-text">
+        That date or time has already passed.
+        <br>
+        It stays visible on the calendar for reference, but it is no longer bookable.
+      </div>
+    </div>
+
+    <div class="info-popup-f">
+      <button type="button" id="infoPopupOk">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="app.js"></script>
+
+<script>
+(function(){
+  const inlineForm = document.getElementById("inlineBookingForm");
+  const inlineSlotSelect = document.getElementById("inline_slotSelect");
+  const inlineSelectedSlot = document.getElementById("inlineSelectedSlot");
+  const inlineRequestedStart = document.getElementById("inline_requestedStart");
+  const inlineRequestedEnd = document.getElementById("inline_requestedEnd");
+  const inlinePreferredTimeStart = document.getElementById("inline_preferredTimeStart");
+  const inlinePreferredTimeEnd = document.getElementById("inline_preferredTimeEnd");
+  const inlineAddressType = document.getElementById("inline_addressType");
+  const inlineAddressOtherWrap = document.getElementById("inline_addressOtherWrap");
+  const inlineAddressText = document.getElementById("inline_address_text");
+
+  const slotPopupBackdrop = document.getElementById("slotPopupBackdrop");
+  const slotPopupX = document.getElementById("slotPopupX");
+  const slotPopupCloseBtn = document.getElementById("slotPopupCloseBtn");
+  const popupSelectedSlot = document.getElementById("popupSelectedSlot");
+  const popupForm = document.getElementById("popupBookingForm");
+  const popupRequestedStart = document.getElementById("popup_requestedStart");
+  const popupRequestedEnd = document.getElementById("popup_requestedEnd");
+  const popupPreferredTimeStart = document.getElementById("popup_preferredTimeStart");
+  const popupPreferredTimeEnd = document.getElementById("popup_preferredTimeEnd");
+  const popupPreferredName = document.getElementById("popup_preferred_name");
+  const popupClientEmail = document.getElementById("popup_client_email");
+  const popupClientPhone = document.getElementById("popup_client_phone");
+  const popupService = document.getElementById("popup_service");
+  const popupAddressType = document.getElementById("popup_addressType");
+  const popupAddressOtherWrap = document.getElementById("popup_addressOtherWrap");
+  const popupAddressText = document.getElementById("popup_address_text");
+  const popupInspoFile = document.getElementById("popup_inspo_file");
+  const popupNotes = document.getElementById("popup_notes");
+  const loadIntoFormBtn = document.getElementById("loadIntoFormBtn");
+
+  const confirmPopupBackdrop = document.getElementById("confirmPopupBackdrop");
+  const confirmPopupX = document.getElementById("confirmPopupX");
+  const confirmPopupOk = document.getElementById("confirmPopupOk");
+
+  const infoPopupBackdrop = document.getElementById("infoPopupBackdrop");
+  const infoPopupX = document.getElementById("infoPopupX");
+  const infoPopupOk = document.getElementById("infoPopupOk");
+
+  let confirmationOpen = false;
+  let calendarHooked = false;
+
+  function toastLikeFallback(msg){
+    const t = document.getElementById("toast");
+    if (!t) {
+      alert(msg);
+      return;
+    }
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+  }
+
+  function formatSlotLabel(start, end){
+    try{
+      const s = new Date(start);
+      const e = end ? new Date(end) : null;
+
+      const datePart = s.toLocaleDateString([], {
+        weekday:"short",
+        month:"short",
+        day:"numeric"
+      });
+
+      const startPart = s.toLocaleTimeString([], {
+        hour:"numeric",
+        minute:"2-digit"
+      });
+
+      const endPart = e ? e.toLocaleTimeString([], {
+        hour:"numeric",
+        minute:"2-digit"
+      }) : "";
+
+      return endPart ? `${datePart} • ${startPart} – ${endPart}` : `${datePart} • ${startPart}`;
+    }catch(err){
+      return "Selected time";
+    }
+  }
+
+  function isPastDateTime(dateLike){
+    if (!dateLike) return false;
+    const dt = new Date(dateLike);
+    if (Number.isNaN(dt.getTime())) return false;
+    return dt.getTime() < Date.now();
+  }
+
+  function syncAddressWraps(){
+    inlineAddressOtherWrap.style.display = inlineAddressType.value === "other" ? "block" : "none";
+    popupAddressOtherWrap.style.display = popupAddressType.value === "other" ? "block" : "none";
+  }
+
+  function clearNoFutureMessage(){
+    Array.from(inlineSlotSelect.options).forEach(opt => {
+      if (opt.dataset.noFuture === "1") opt.remove();
+    });
+  }
+
+  function addNoFutureMessage(){
+    clearNoFutureMessage();
+    const msg = document.createElement("option");
+    msg.value = "";
+    msg.textContent = "No future slots available right now";
+    msg.disabled = true;
+    msg.selected = true;
+    msg.dataset.noFuture = "1";
+    inlineSlotSelect.appendChild(msg);
+  }
+
+  function getRealSlotOptions(){
+    return Array.from(inlineSlotSelect.options).filter(opt =>
+      !opt.dataset.placeholder && !opt.dataset.noFuture
+    );
+  }
+
+  function ensureSelectHasOption(start, end){
+    if (!start || isPastDateTime(end || start)) return;
+
+    clearNoFutureMessage();
+
+    const value = String(start);
+    const label = formatSlotLabel(start, end);
+
+    let existing = Array.from(inlineSlotSelect.options).find(opt =>
+      opt.value === value && !opt.dataset.placeholder && !opt.dataset.noFuture
+    );
+
+    if (!existing){
+      existing = document.createElement("option");
+      existing.value = value;
+      existing.textContent = label;
+      existing.dataset.end = end || "";
+      inlineSlotSelect.appendChild(existing);
+    } else {
+      existing.textContent = label;
+      existing.dataset.end = end || "";
+    }
+
+    inlineSlotSelect.value = value;
+    inlineRequestedStart.value = value;
+    inlineRequestedEnd.value = end || "";
+    inlineSelectedSlot.textContent = label;
+  }
+
+  function timesAreValid(startTime, endTime){
+    return !!startTime && !!endTime && endTime > startTime;
+  }
+
+  function openSlotPopup(start, end){
+    if (isPastDateTime(end || start)){
+      openInfoPopup();
+      return;
+    }
+
+    popupRequestedStart.value = start || "";
+    popupRequestedEnd.value = end || "";
+    popupSelectedSlot.textContent = formatSlotLabel(start, end);
+    slotPopupBackdrop.classList.add("show");
+    slotPopupBackdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function closeSlotPopup(){
+    slotPopupBackdrop.classList.remove("show");
+    slotPopupBackdrop.setAttribute("aria-hidden", "true");
+  }
+
+  function openConfirmPopup(){
+    if (confirmationOpen) return;
+    confirmationOpen = true;
+    confirmPopupBackdrop.classList.add("show");
+    confirmPopupBackdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function closeConfirmPopup(){
+    confirmationOpen = false;
+    confirmPopupBackdrop.classList.remove("show");
+    confirmPopupBackdrop.setAttribute("aria-hidden", "true");
+  }
+
+  function openInfoPopup(){
+    infoPopupBackdrop.classList.add("show");
+    infoPopupBackdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function closeInfoPopup(){
+    infoPopupBackdrop.classList.remove("show");
+    infoPopupBackdrop.setAttribute("aria-hidden", "true");
+  }
+
+  function copyPopupToInline(){
+    const slotStart = popupRequestedStart.value || "";
+    const slotEnd = popupRequestedEnd.value || "";
+
+    ensureSelectHasOption(slotStart, slotEnd);
+
+    inlineRequestedStart.value = slotStart;
+    inlineRequestedEnd.value = slotEnd;
+
+    inlinePreferredTimeStart.value = popupPreferredTimeStart.value || "";
+    inlinePreferredTimeEnd.value = popupPreferredTimeEnd.value || "";
+
+    document.getElementById("inline_preferred_name").value = popupPreferredName.value || "";
+    document.getElementById("inline_client_email").value = popupClientEmail.value || "";
+    document.getElementById("inline_client_phone").value = popupClientPhone.value || "";
+    document.getElementById("inline_service").value = popupService.value || "";
+    inlineAddressType.value = popupAddressType.value || "";
+    inlineAddressText.value = popupAddressText.value || "";
+    document.getElementById("inline_notes").value = popupNotes.value || "";
+
+    syncAddressWraps();
+
+    if (popupInspoFile.files && popupInspoFile.files[0]){
+      try{
+        const dt = new DataTransfer();
+        dt.items.add(popupInspoFile.files[0]);
+        document.getElementById("inline_inspo_file").files = dt.files;
+      }catch(err){}
+    }
+  }
+
+  function filterPastOptionsInDropdown(){
+    clearNoFutureMessage();
+
+    Array.from(inlineSlotSelect.options).forEach(opt => {
+      if (opt.dataset.placeholder || opt.dataset.noFuture) return;
+      const start = opt.value;
+      const end = opt.dataset.end || "";
+      if (start && isPastDateTime(end || start)){
+        opt.remove();
+      }
+    });
+
+    if (!getRealSlotOptions().length){
+      addNoFutureMessage();
+    }
+  }
+
+  function harvestCalendarEventsToDropdown(){
+    const cal = window.__axaniLastCalendar || (window.__axaniCalendars && window.__axaniCalendars[0]);
+    if (!cal || typeof cal.getEvents !== "function") return false;
+
+    clearNoFutureMessage();
+
+    const existingValues = new Set(getRealSlotOptions().map(opt => opt.value));
+
+    cal.getEvents().forEach(ev => {
+      const start = ev.start ? ev.start.toISOString() : "";
+      let end = ev.end ? ev.end.toISOString() : "";
+
+      if (!start) return;
+      if (!end && ev.start){
+        end = new Date(ev.start.getTime() + 60 * 60 * 1000).toISOString();
+      }
+      if (isPastDateTime(end || start)) return;
+      if (existingValues.has(start)) return;
+
+      const opt = document.createElement("option");
+      opt.value = start;
+      opt.textContent = formatSlotLabel(start, end);
+      opt.dataset.end = end || "";
+      inlineSlotSelect.appendChild(opt);
+      existingValues.add(start);
+    });
+
+    filterPastOptionsInDropdown();
+    return true;
+  }
+
+  inlineAddressType.addEventListener("change", syncAddressWraps);
+  popupAddressType.addEventListener("change", syncAddressWraps);
+  syncAddressWraps();
+
+  inlineSlotSelect.addEventListener("change", function(){
+    const selectedOption = inlineSlotSelect.options[inlineSlotSelect.selectedIndex];
+    if (!selectedOption || selectedOption.dataset.placeholder || selectedOption.dataset.noFuture){
+      inlineRequestedStart.value = "";
+      inlineRequestedEnd.value = "";
+      inlineSelectedSlot.textContent = "Choose a slot above";
+      return;
+    }
+
+    inlineRequestedStart.value = selectedOption.value || "";
+    inlineRequestedEnd.value = selectedOption.dataset.end || "";
+    inlineSelectedSlot.textContent = selectedOption.textContent;
+  });
+
+  loadIntoFormBtn.addEventListener("click", function(){
+    if (!popupForm.reportValidity()) return;
+
+    if (!timesAreValid(popupPreferredTimeStart.value, popupPreferredTimeEnd.value)){
+      toastLikeFallback("Preferred end time must be after preferred start time.");
+      return;
+    }
+
+    copyPopupToInline();
+    closeSlotPopup();
+    inlineForm.scrollIntoView({ behavior:"smooth", block:"start" });
+  });
+
+  popupForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!popupForm.reportValidity()) return;
+
+    if (!timesAreValid(popupPreferredTimeStart.value, popupPreferredTimeEnd.value)){
+      toastLikeFallback("Preferred end time must be after preferred start time.");
+      return;
+    }
+
+    copyPopupToInline();
+    closeSlotPopup();
+
+    if (typeof inlineForm.requestSubmit === "function"){
+      inlineForm.requestSubmit();
+    } else {
+      const submitEvent = new Event("submit", { bubbles:true, cancelable:true });
+      inlineForm.dispatchEvent(submitEvent);
+    }
+  });
+
+  inlineForm.addEventListener("submit", function(e){
+    const selectedOption = inlineSlotSelect.options[inlineSlotSelect.selectedIndex];
+    if (!selectedOption || selectedOption.dataset.placeholder || selectedOption.dataset.noFuture){
+      e.preventDefault();
+      toastLikeFallback("Please choose a slot first.");
+      return;
+    }
+
+    inlineRequestedStart.value = selectedOption.value || "";
+    inlineRequestedEnd.value = selectedOption.dataset.end || "";
+
+    if (!inlinePreferredTimeStart.value || !inlinePreferredTimeEnd.value){
+      e.preventDefault();
+      toastLikeFallback("Please enter both a preferred start and end time.");
+      return;
+    }
+
+    if (!timesAreValid(inlinePreferredTimeStart.value, inlinePreferredTimeEnd.value)){
+      e.preventDefault();
+      toastLikeFallback("Preferred end time must be after preferred start time.");
+      return;
+    }
+
+    if (isPastDateTime(inlineRequestedEnd.value || inlineRequestedStart.value)){
+      e.preventDefault();
+      openInfoPopup();
+      return;
+    }
+
+    setTimeout(openConfirmPopup, 150);
+  });
+
+  slotPopupX.addEventListener("click", closeSlotPopup);
+  slotPopupCloseBtn.addEventListener("click", closeSlotPopup);
+  confirmPopupX.addEventListener("click", closeConfirmPopup);
+  confirmPopupOk.addEventListener("click", closeConfirmPopup);
+  infoPopupX.addEventListener("click", closeInfoPopup);
+  infoPopupOk.addEventListener("click", closeInfoPopup);
+
+  slotPopupBackdrop.addEventListener("click", function(e){
+    if (e.target === slotPopupBackdrop) closeSlotPopup();
+  });
+
+  confirmPopupBackdrop.addEventListener("click", function(e){
+    if (e.target === confirmPopupBackdrop) closeConfirmPopup();
+  });
+
+  infoPopupBackdrop.addEventListener("click", function(e){
+    if (e.target === infoPopupBackdrop) closeInfoPopup();
+  });
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape"){
+      closeSlotPopup();
+      closeConfirmPopup();
+      closeInfoPopup();
+    }
+  });
+
+  function attachCalendarHooks(){
+    const cal = window.__axaniLastCalendar || (window.__axaniCalendars && window.__axaniCalendars[0]);
+    if (!cal || calendarHooked) return false;
+
+    calendarHooked = true;
+
+    if (typeof cal.on === "function"){
+      cal.on("eventClick", function(info){
+        if (info.jsEvent) info.jsEvent.preventDefault();
+
+        const eventObj = info.event;
+        const start = eventObj && eventObj.start ? eventObj.start.toISOString() : "";
+        let end = eventObj && eventObj.end ? eventObj.end.toISOString() : "";
+
+        if (!end && eventObj && eventObj.start){
+          end = new Date(eventObj.start.getTime() + 60 * 60 * 1000).toISOString();
+        }
+
+        if (isPastDateTime(end || start)){
+          openInfoPopup();
+          return;
+        }
+
+        ensureSelectHasOption(start, end);
+        openSlotPopup(start, end);
+      });
+
+      cal.on("dateClick", function(info){
+        const start = info.date ? info.date.toISOString() : "";
+        const end = info.date ? new Date(info.date.getTime() + 60 * 60 * 1000).toISOString() : "";
+
+        if (isPastDateTime(end || start)){
+          openInfoPopup();
+          return;
+        }
+
+        ensureSelectHasOption(start, end);
+        openSlotPopup(start, end);
+      });
+
+      cal.on("eventDidMount", function(info){
+        const start = info.event && info.event.start ? info.event.start : null;
+        const end = info.event && info.event.end ? info.event.end : null;
+        if (isPastDateTime(end || start)){
+          info.el.classList.add("past-slot");
+        }
+      });
+
+      cal.on("eventsSet", function(){
+        harvestCalendarEventsToDropdown();
+      });
+    }
+
+    harvestCalendarEventsToDropdown();
+    return true;
+  }
+
+  let tries = 0;
+  const hookTimer = setInterval(function(){
+    tries += 1;
+
+    const attached = attachCalendarHooks();
+    harvestCalendarEventsToDropdown();
+
+    if (tries > 60 || (attached && getRealSlotOptions().length > 0)){
+      filterPastOptionsInDropdown();
+      clearInterval(hookTimer);
+    }
+  }, 300);
+})();
+</script>
+
+</body>
+</html>  font-size: 1rem;
+}
+
+.booking-card-b{
+  padding: 18px;
+}
+
+#calendar{
+  min-height:760px;
+}
+
+.fc{
+  color:#f5f5fb;
+}
+
+.fc .fc-toolbar{
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.fc .fc-toolbar-title{
+  color:#f5f5fb;
+  font-size:1.3rem;
+}
+
+.fc .fc-button{
+  background:#ff8fc7;
+  border:none;
+  color:#130612;
+  font-weight:700;
+  border-radius:10px;
+  box-shadow:none;
+}
+
+.fc .fc-button:hover{
+  background:#ffb3da;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active{
+  background:#ffb3da;
+  color:#130612;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid{
+  border-color: rgba(255,255,255,0.10);
+}
+
+.fc-daygrid-day-number,
+.fc-timegrid-slot-label-cushion,
+.fc-timegrid-axis-cushion{
+  color:#f5f5fb;
+  text-decoration:none;
+}
+
+.fc-col-header-cell{
+  background:#ff8fc7;
+}
+
+.fc-col-header-cell-cushion{
+  color:#000000;
+  font-weight:700;
+  text-decoration:none;
+}
+
+.fc-event{
+  background: rgba(255,143,199,0.16);
+  border: 1px solid rgba(255,143,199,0.45);
+  color:#ffd9ec;
+  border-radius:10px;
+  padding:2px 6px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.fc-event-main{
+  white-space:normal;
+}
+
+.fc-event.past-slot{
+  opacity:0.45;
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(255,255,255,0.12);
+  color:#c8c8d8;
+  cursor:not-allowed;
+}
+
+.fc-event.past-slot::after{
+  content:" • past";
+  font-size:11px;
+  opacity:0.8;
+}
+
+.form-grid{
+  display:grid;
+  gap:12px;
+}
+
+.two-col{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+.helper{
+  color:#b9b9cc;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.inline-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.selected-slot-chip{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,143,199,0.30);
+  background: rgba(255,143,199,0.10);
+  color:#ffb3da;
+  font-size:13px;
+  font-weight:700;
+}
+
+.slot-popup-backdrop,
+.confirm-popup-backdrop,
+.info-popup-backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  z-index:9998;
+  padding:18px;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+.slot-popup-backdrop.show,
+.confirm-popup-backdrop.show,
+.info-popup-backdrop.show{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.slot-popup,
+.confirm-popup,
+.info-popup{
+  width:min(560px,100%);
+  background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(18,18,32,0.92));
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,0.45);
+  overflow:hidden;
+  margin:24px auto;
+  max-height:calc(100vh - 48px);
+  overflow-y:auto;
+}
+
+.slot-popup-h,
+.confirm-popup-h,
+.info-popup-h{
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  position:sticky;
+  top:0;
+  background: linear-gradient(180deg, rgba(18,18,32,0.99), rgba(18,18,32,0.97));
+  z-index:2;
+}
+
+.slot-popup-h h2,
+.confirm-popup-h h2,
+.info-popup-h h2{
+  margin:0;
+  font-size:1.05rem;
+}
+
+.slot-popup-b,
+.confirm-popup-b,
+.info-popup-b{
+  padding:18px;
+}
+
+.slot-popup-f,
+.confirm-popup-f,
+.info-popup-f{
+  padding:14px 18px 18px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.close-x{
+  background:transparent;
+  border:0;
+  color:#f5f5fb;
+  font-size:22px;
+  cursor:pointer;
+  box-shadow:none;
+  padding:0;
+}
+
+.close-x:hover{
+  color:#ffb3da;
+  transform:none;
+}
+
+.popup-slot-chip{
+  display:inline-block;
+  margin:2px 0 16px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,143,199,0.30);
+  background: rgba(255,143,199,0.10);
+  color:#ffb3da;
+  font-size:13px;
+  font-weight:700;
+}
+
+.popup-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+.secondary-btn{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.18);
+  color:#f5f5fb;
+}
+
+.secondary-btn:hover{
+  border-color:rgba(255,179,218,0.70);
+  color:#ffb3da;
+}
+
+.confirm-icon{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  margin:0 auto 14px;
+  background:rgba(255,143,199,0.14);
+  border:1px solid rgba(255,143,199,0.34);
+  font-size:26px;
+}
+
+.confirm-text{
+  text-align:center;
+  line-height:1.6;
+  color:#f5f5fb;
+}
+
+.confirm-text strong{
+  color:#ffb3da;
+}
+
+.slot-note{
+  margin:-4px 0 12px;
+  color:#b9b9cc;
+  font-size:13px;
+  line-height:1.55;
+}
+
+@media (max-width:640px){
+  #calendar{
+    min-height:640px;
+  }
+
+  .slot-popup,
+  .confirm-popup,
+  .info-popup{
+    max-height:calc(100vh - 20px);
+    margin:10px auto;
+  }
+
+  .two-col{
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+window.__axaniCalendars = [];
+window.__axaniCalendarPatched = false;
+
+document.addEventListener("DOMContentLoaded", function(){
+  if (!window.FullCalendar || window.__axaniCalendarPatched) return;
+
+  const OriginalCalendar = window.FullCalendar.Calendar;
+
+  function WrappedCalendar(el, options){
+    const instance = new OriginalCalendar(el, options);
+    window.__axaniCalendars.push(instance);
+    window.__axaniLastCalendar = instance;
+    return instance;
+  }
+
+  WrappedCalendar.prototype = OriginalCalendar.prototype;
+  Object.setPrototypeOf(WrappedCalendar, OriginalCalendar);
+
+  window.FullCalendar.Calendar = WrappedCalendar;
+  window.__axaniCalendarPatched = true;
+});
+</script>
+</head>
+
+<body>
+
+<header>
+<nav>
+<a class="active" href="index.html">Booking</a>
+<a href="gallery.html">Gallery</a>
+<a href="policies.html">Policies</a>
+</nav>
+</header>
+
+<main>
+
+<h1>Axani Nails</h1>
+
+<p class="booking-intro">
+Book directly from the calendar, or use the request form below to choose a slot from the dropdown.
+<br>
+<b>Past dates stay visible for reference, but they cannot be booked.</b>
+<br>
+<b>Bookings are not confirmed until approved and the deposit is paid.</b>
+</p>
+
+<div class="booking-grid">
+
+<section class="booking-card">
+  <div class="booking-card-h">Calendar Booking</div>
+  <div class="booking-card-b">
+    <p class="helper">
+      Click an available slot to open the booking popup. If a slot is long, choose a preferred start and end time within that block.
+    </p>
+
+    <div id="calendar"></div>
+
+    <p id="emptyCalendarNote" class="helper" style="display:none;margin-top:14px;">
+      No availability is showing right now. Add rows in your <b>AVAILABILITY</b> sheet and mark them TRUE.
+    </p>
+  </div>
+</section>
+
+<section class="booking-card">
+  <div class="booking-card-h">Request by Dropdown</div>
+  <div class="booking-card-b">
+
+    <p class="helper">
+      Choose an availability block below, then enter the preferred start and end time you want within that block.
+    </p>
+
+    <form id="inlineBookingForm" class="form-grid">
+
+      <label for="inline_slotSelect">Choose a time block *</label>
+      <select id="inline_slotSelect" required>
         <option value="" disabled selected>Choose a slot</option>
       </select>
 
