@@ -128,6 +128,142 @@
       background: rgba(255,255,255,0.03);
       color: #b9b9cc;
     }
+
+    .actionPopupBackdrop,
+    .resultPopupBackdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.58);
+      z-index: 9998;
+      padding: 18px;
+      overflow: auto;
+    }
+
+    .actionPopupBackdrop.show,
+    .resultPopupBackdrop.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .actionPopup,
+    .resultPopup {
+      width: min(620px, 100%);
+      background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(18,18,32,0.92));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+      overflow: hidden;
+    }
+
+    .actionPopupHeader,
+    .resultPopupHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .actionPopupHeader h2,
+    .resultPopupHeader h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .actionPopupBody,
+    .resultPopupBody {
+      padding: 18px;
+    }
+
+    .actionPopupFooter,
+    .resultPopupFooter {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 0 18px 18px;
+    }
+
+    .popupCloseX {
+      background: transparent;
+      border: 0;
+      color: #f5f5fb;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .popupCloseX:hover {
+      color: #ffb3da;
+      transform: none;
+    }
+
+    .popupLabel {
+      display: block;
+      font-size: 13px;
+      color: #b9b9cc;
+      margin-bottom: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .popupTextarea {
+      width: 100%;
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .popupHelp {
+      color: #b9b9cc;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    .popupSummary {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .summaryChip {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,143,199,0.30);
+      background: rgba(255,143,199,0.10);
+      color: #ffb3da;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .calendarBtn {
+      background: #ff8fc7;
+      color: #130612;
+      border: none;
+    }
+
+    .calendarBtn:hover {
+      background: #ffb3da;
+    }
+
+    .secondaryBtn {
+      background: rgba(255,255,255,0.04);
+      color: #f5f5fb;
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: none;
+    }
+
+    .secondaryBtn:hover {
+      border-color: rgba(255,143,199,0.35);
+    }
   </style>
 </head>
 <body>
@@ -164,220 +300,22 @@
 
 <div id="toast" class="toast"></div>
 
-<script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8UBWKpYgbqdRJouFH3ESdelrEt4BesAPm35MP7aI4Gz5rZg7RzgbTBTYafPSJswnH/exec";
-  const TOKEN_KEY = "axaniAdminToken";
+<div id="actionPopupBackdrop" class="actionPopupBackdrop" aria-hidden="true">
+  <div class="actionPopup" role="dialog" aria-modal="true" aria-labelledby="actionPopupTitle">
+    <div class="actionPopupHeader">
+      <h2 id="actionPopupTitle">Review booking</h2>
+      <button type="button" class="popupCloseX" id="actionPopupX" aria-label="Close">×</button>
+    </div>
 
-  function toast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 3500);
-  }
+    <div class="actionPopupBody">
+      <div class="popupSummary">
+        <div id="actionPopupStatusChip" class="summaryChip">Approve</div>
+        <div id="actionPopupBookingName" style="font-size:1.05rem; font-weight:800; color:#f5f5fb;">Booking request</div>
+        <div id="actionPopupBookingTime" style="color:#b9b9cc; line-height:1.5;">—</div>
+      </div>
 
-  function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-
-  function requireLogin() {
-    const token = getToken();
-    if (!token) {
-      window.location.href = "login.html";
-      return null;
-    }
-    return token;
-  }
-
-  function logout() {
-    localStorage.removeItem("axaniAdminToken");
-    localStorage.removeItem("axaniAdminUser");
-    window.location.href = "login.html";
-  }
-
-  function formatDateTime(value) {
-    if (!value) return "—";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit"
-    }).format(d);
-  }
-
-  function escapeHtml(str) {
-    return String(str || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  async function fetchPendingBookings() {
-    const token = requireLogin();
-    if (!token) return;
-
-    const loadingBox = document.getElementById("loadingBox");
-    const container = document.getElementById("requestsContainer");
-    const emptyState = document.getElementById("emptyState");
-
-    loadingBox.classList.remove("hidden");
-    container.innerHTML = "";
-    emptyState.classList.add("hidden");
-
-    try {
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "getPendingBookings",
-          token
-        })
-      });
-
-      const data = await res.json();
-
-      if (!data.ok) {
-        throw new Error(data.error || "Failed to load requests");
-      }
-
-      const bookings = data.bookings || [];
-
-      if (bookings.length === 0) {
-        emptyState.classList.remove("hidden");
-        return;
-      }
-
-      container.innerHTML = bookings.map(renderCard).join("");
-      bindActionButtons();
-
-    } catch (err) {
-      console.error(err);
-      toast("Could not load pending requests.");
-      if (String(err.message || "").toLowerCase().includes("unauthorized")) {
-        logout();
-      }
-    } finally {
-      loadingBox.classList.add("hidden");
-    }
-  }
-
-  function renderCard(booking) {
-    const startText = formatDateTime(booking.start);
-    const endText = formatDateTime(booking.end);
-
-    return `
-      <article class="requestCard" data-row="${booking.row}">
-        <div class="requestHeader">
-          <div>
-            <h2>${escapeHtml(booking.name || "Unnamed request")}</h2>
-            <div style="height:6px;"></div>
-            <span class="statusPill">Pending review</span>
-          </div>
-          <div class="badge">Row ${escapeHtml(booking.row)}</div>
-        </div>
-
-        <div class="metaGrid">
-          <div class="metaItem">
-            <span class="metaLabel">Email</span>
-            <div class="metaValue">${escapeHtml(booking.email || "—")}</div>
-          </div>
-
-          <div class="metaItem">
-            <span class="metaLabel">Service</span>
-            <div class="metaValue">${escapeHtml(booking.service || "—")}</div>
-          </div>
-
-          <div class="metaItem">
-            <span class="metaLabel">Requested start</span>
-            <div class="metaValue">${escapeHtml(startText)}</div>
-          </div>
-
-          <div class="metaItem">
-            <span class="metaLabel">Requested end</span>
-            <div class="metaValue">${escapeHtml(endText)}</div>
-          </div>
-
-          <div class="metaItem" style="grid-column: 1 / -1;">
-            <span class="metaLabel">Notes</span>
-            <div class="metaValue">${escapeHtml(booking.notes || "No notes provided.")}</div>
-          </div>
-        </div>
-
-        <div class="requestActions">
-          <button class="approveBtn" data-row="${booking.row}" data-status="APPROVED">Approve</button>
-          <button class="denyBtn" data-row="${booking.row}" data-status="DENIED">Deny</button>
-        </div>
-      </article>
-    `;
-  }
-
-  function bindActionButtons() {
-    document.querySelectorAll("[data-status]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const row = Number(btn.dataset.row);
-        const status = btn.dataset.status;
-        await updateBookingStatus(row, status, btn);
-      });
-    });
-  }
-
-  async function updateBookingStatus(row, status, clickedBtn) {
-    const token = requireLogin();
-    if (!token) return;
-
-    const card = document.querySelector(`.requestCard[data-row="${row}"]`);
-    const buttons = card ? card.querySelectorAll("button") : [];
-    buttons.forEach(b => b.disabled = true);
-
-    try {
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "updateBookingStatus",
-          token,
-          row,
-          status
-        })
-      });
-
-      const data = await res.json();
-
-      if (!data.ok) {
-        throw new Error(data.error || "Update failed");
-      }
-
-      if (card) {
-        card.remove();
-      }
-
-      const remaining = document.querySelectorAll(".requestCard").length;
-      if (remaining === 0) {
-        document.getElementById("emptyState").classList.remove("hidden");
-      }
-
-      toast(status === "APPROVED" ? "Booking approved." : "Booking denied.");
-
-    } catch (err) {
-      console.error(err);
-      toast("Could not update booking.");
-      if (String(err.message || "").toLowerCase().includes("unauthorized")) {
-        logout();
-      }
-      buttons.forEach(b => b.disabled = false);
-    }
-  }
-
-  document.getElementById("logoutBtn").addEventListener("click", logout);
-  document.getElementById("refreshBtn").addEventListener("click", fetchPendingBookings);
-
-  requireLogin();
-  fetchPendingBookings();
-</script>
-</body>
-</html>
+      <label class="popupLabel" for="decisionNotes">Notes to include in the email</label>
+      <textarea id="decisionNotes" class="popupTextarea" placeholder="Examples:
+- approved for 2:30 PM
+- please arrive with bare nails
+- I’m unavailable at your requested time, but I can do 4 PM
