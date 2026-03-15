@@ -1,4 +1,3 @@
-```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -92,7 +91,6 @@
   text-decoration:none;
 }
 
-/* DAY HEADER STYLING */
 .fc-col-header-cell{
   background:#ff8fc7;
 }
@@ -279,7 +277,6 @@
 </style>
 
 <script>
-/* Capture the FullCalendar instance created in app.js */
 window.__axaniCalendars = [];
 window.__axaniCalendarPatched = false;
 
@@ -328,9 +325,7 @@ Book directly from the calendar, or use the request form below to choose a slot 
 
 <section class="booking-card">
   <div class="booking-card-h">Calendar Booking</div>
-
   <div class="booking-card-b">
-
     <p class="helper">
       Click an available slot to open the booking popup for that specific time.
     </p>
@@ -340,13 +335,11 @@ Book directly from the calendar, or use the request form below to choose a slot 
     <p id="emptyCalendarNote" class="helper" style="display:none;margin-top:14px;">
       No availability is showing right now. Add rows in your <b>AVAILABILITY</b> sheet and mark them TRUE.
     </p>
-
   </div>
 </section>
 
 <section class="booking-card">
   <div class="booking-card-h">Request by Dropdown</div>
-
   <div class="booking-card-b">
 
     <p class="helper">
@@ -402,7 +395,6 @@ Book directly from the calendar, or use the request form below to choose a slot 
       <div class="inline-actions">
         <button id="inlineSubmitBtn" type="submit">Submit request</button>
       </div>
-
     </form>
 
   </div>
@@ -412,12 +404,11 @@ Book directly from the calendar, or use the request form below to choose a slot 
 
 </main>
 
-<!-- SLOT POPUP -->
 <div id="slotPopupBackdrop" class="slot-popup-backdrop" aria-hidden="true">
   <div class="slot-popup" role="dialog" aria-modal="true" aria-labelledby="slotPopupTitle">
     <div class="slot-popup-h">
       <h2 id="slotPopupTitle">Book this slot</h2>
-      <button type="button" class="close-x" id="slotPopupClose" aria-label="Close">×</button>
+      <button type="button" class="close-x" id="slotPopupX" aria-label="Close">×</button>
     </div>
 
     <div class="slot-popup-b">
@@ -464,18 +455,18 @@ Book directly from the calendar, or use the request form below to choose a slot 
         <div class="popup-actions">
           <button type="button" id="loadIntoFormBtn" class="secondary-btn">Load into form</button>
           <button type="submit" id="popupSubmitBtn">Submit booking request</button>
+          <button type="button" id="slotPopupCloseBtn" class="secondary-btn">Close</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- CONFIRMATION POPUP -->
 <div id="confirmPopupBackdrop" class="confirm-popup-backdrop" aria-hidden="true">
   <div class="confirm-popup" role="dialog" aria-modal="true" aria-labelledby="confirmPopupTitle">
     <div class="confirm-popup-h">
       <h2 id="confirmPopupTitle">Request sent</h2>
-      <button type="button" class="close-x" id="confirmPopupClose" aria-label="Close">×</button>
+      <button type="button" class="close-x" id="confirmPopupX" aria-label="Close">×</button>
     </div>
 
     <div class="confirm-popup-b">
@@ -488,7 +479,7 @@ Book directly from the calendar, or use the request form below to choose a slot 
     </div>
 
     <div class="confirm-popup-f">
-      <button type="button" id="confirmPopupOk">Okay</button>
+      <button type="button" id="confirmPopupOk">Close</button>
     </div>
   </div>
 </div>
@@ -508,10 +499,10 @@ Book directly from the calendar, or use the request form below to choose a slot 
   const inlineAddressText = document.getElementById("inline_address_text");
 
   const slotPopupBackdrop = document.getElementById("slotPopupBackdrop");
-  const slotPopupClose = document.getElementById("slotPopupClose");
+  const slotPopupX = document.getElementById("slotPopupX");
+  const slotPopupCloseBtn = document.getElementById("slotPopupCloseBtn");
   const popupSelectedSlot = document.getElementById("popupSelectedSlot");
   const popupForm = document.getElementById("popupBookingForm");
-
   const popupRequestedStart = document.getElementById("popup_requestedStart");
   const popupRequestedEnd = document.getElementById("popup_requestedEnd");
   const popupPreferredName = document.getElementById("popup_preferred_name");
@@ -526,12 +517,10 @@ Book directly from the calendar, or use the request form below to choose a slot 
   const loadIntoFormBtn = document.getElementById("loadIntoFormBtn");
 
   const confirmPopupBackdrop = document.getElementById("confirmPopupBackdrop");
-  const confirmPopupClose = document.getElementById("confirmPopupClose");
+  const confirmPopupX = document.getElementById("confirmPopupX");
   const confirmPopupOk = document.getElementById("confirmPopupOk");
 
-  let selectedSlot = null;
-  let popupTransferredFile = null;
-  let confirmationShownForThisSubmit = false;
+  let confirmationOpen = false;
 
   function formatSlotLabel(start, end){
     try{
@@ -560,12 +549,14 @@ Book directly from the calendar, or use the request form below to choose a slot 
     }
   }
 
+  function syncAddressWraps(){
+    inlineAddressOtherWrap.style.display = inlineAddressType.value === "other" ? "block" : "none";
+    popupAddressOtherWrap.style.display = popupAddressType.value === "other" ? "block" : "none";
+  }
+
   function ensureSelectHasOption(start, end){
-    if (!inlineSlotSelect) return;
-
-    const value = String(start || "");
-    if (!value) return;
-
+    if (!start) return;
+    const value = String(start);
     const label = formatSlotLabel(start, end);
 
     let existing = Array.from(inlineSlotSelect.options).find(opt => opt.value === value);
@@ -573,31 +564,20 @@ Book directly from the calendar, or use the request form below to choose a slot 
       existing = document.createElement("option");
       existing.value = value;
       existing.textContent = label;
+      existing.dataset.end = end || "";
       inlineSlotSelect.appendChild(existing);
     } else {
       existing.textContent = label;
+      existing.dataset.end = end || "";
     }
 
     inlineSlotSelect.value = value;
-  }
-
-  function updateInlineChip(start, end){
-    const label = formatSlotLabel(start, end);
-    inlineSelectedSlot.textContent = label;
-    inlineRequestedStart.value = start || "";
+    inlineRequestedStart.value = value;
     inlineRequestedEnd.value = end || "";
-  }
-
-  function syncAddressWraps(){
-    inlineAddressOtherWrap.style.display =
-      inlineAddressType.value === "other" ? "block" : "none";
-
-    popupAddressOtherWrap.style.display =
-      popupAddressType.value === "other" ? "block" : "none";
+    inlineSelectedSlot.textContent = label;
   }
 
   function openSlotPopup(start, end){
-    selectedSlot = { start, end };
     popupRequestedStart.value = start || "";
     popupRequestedEnd.value = end || "";
     popupSelectedSlot.textContent = formatSlotLabel(start, end);
@@ -611,20 +591,20 @@ Book directly from the calendar, or use the request form below to choose a slot 
   }
 
   function openConfirmPopup(){
+    if (confirmationOpen) return;
+    confirmationOpen = true;
     confirmPopupBackdrop.classList.add("show");
     confirmPopupBackdrop.setAttribute("aria-hidden", "false");
   }
 
   function closeConfirmPopup(){
+    confirmationOpen = false;
     confirmPopupBackdrop.classList.remove("show");
     confirmPopupBackdrop.setAttribute("aria-hidden", "true");
   }
 
   function copyPopupToInline(){
-    if (!popupRequestedStart.value) return;
-
     ensureSelectHasOption(popupRequestedStart.value, popupRequestedEnd.value);
-    updateInlineChip(popupRequestedStart.value, popupRequestedEnd.value);
 
     document.getElementById("inline_preferred_name").value = popupPreferredName.value;
     document.getElementById("inline_client_email").value = popupClientEmail.value;
@@ -637,40 +617,24 @@ Book directly from the calendar, or use the request form below to choose a slot 
     syncAddressWraps();
 
     if (popupInspoFile.files && popupInspoFile.files[0]){
-      popupTransferredFile = popupInspoFile.files[0];
       try{
         const dt = new DataTransfer();
-        dt.items.add(popupTransferredFile);
+        dt.items.add(popupInspoFile.files[0]);
         document.getElementById("inline_inspo_file").files = dt.files;
-      }catch(err){
-        /* some browsers restrict this; form still works without forced copy */
-      }
+      }catch(err){}
     }
 
     inlineForm.scrollIntoView({ behavior:"smooth", block:"start" });
   }
 
-  function showConfirmationOnce(){
-    if (confirmationShownForThisSubmit) return;
-    confirmationShownForThisSubmit = true;
-    openConfirmPopup();
-    setTimeout(() => {
-      confirmationShownForThisSubmit = false;
-    }, 1500);
-  }
-
-  /* Inline form helpers */
   inlineAddressType.addEventListener("change", syncAddressWraps);
   popupAddressType.addEventListener("change", syncAddressWraps);
   syncAddressWraps();
 
   inlineSlotSelect.addEventListener("change", function(){
-    const start = inlineSlotSelect.value;
     const selectedOption = inlineSlotSelect.options[inlineSlotSelect.selectedIndex];
-    inlineRequestedStart.value = start || "";
-    if (selectedOption && selectedOption.dataset.end){
-      inlineRequestedEnd.value = selectedOption.dataset.end;
-    }
+    inlineRequestedStart.value = inlineSlotSelect.value || "";
+    inlineRequestedEnd.value = selectedOption ? (selectedOption.dataset.end || "") : "";
     inlineSelectedSlot.textContent = selectedOption ? selectedOption.textContent : "Choose a slot above";
   });
 
@@ -687,30 +651,19 @@ Book directly from the calendar, or use the request form below to choose a slot 
     copyPopupToInline();
     closeSlotPopup();
 
-    /*
-      Let existing app.js submit handler run if it exists.
-      We dispatch a real submit event on the inline form.
-    */
     const submitEvent = new Event("submit", { bubbles:true, cancelable:true });
     inlineForm.dispatchEvent(submitEvent);
 
-    /*
-      Fallback confirmation popup in case the existing submit handler is async.
-      This gives the visual confirmation the user asked for.
-    */
-    showConfirmationOnce();
+    setTimeout(openConfirmPopup, 150);
   });
 
   inlineForm.addEventListener("submit", function(){
-    /*
-      Keep the confirmation popup for the dropdown submission path too.
-      Delay slightly so any existing app.js validation/submission logic can run first.
-    */
-    setTimeout(showConfirmationOnce, 200);
+    setTimeout(openConfirmPopup, 150);
   });
 
-  slotPopupClose.addEventListener("click", closeSlotPopup);
-  confirmPopupClose.addEventListener("click", closeConfirmPopup);
+  slotPopupX.addEventListener("click", closeSlotPopup);
+  slotPopupCloseBtn.addEventListener("click", closeSlotPopup);
+  confirmPopupX.addEventListener("click", closeConfirmPopup);
   confirmPopupOk.addEventListener("click", closeConfirmPopup);
 
   slotPopupBackdrop.addEventListener("click", function(e){
@@ -728,10 +681,6 @@ Book directly from the calendar, or use the request form below to choose a slot 
     }
   });
 
-  /*
-    Attach click handling to the FullCalendar instance created in app.js.
-    This adds the booking popup + load into form behavior even if app.js did not.
-  */
   function attachCalendarHooks(){
     const cal = window.__axaniLastCalendar || (window.__axaniCalendars && window.__axaniCalendars[0]);
     if (!cal || cal.__axaniHooksAttached) return false;
@@ -747,28 +696,22 @@ Book directly from the calendar, or use the request form below to choose a slot 
         let end = eventObj && eventObj.end ? eventObj.end.toISOString() : "";
 
         if (!end && eventObj && eventObj.start){
-          const tempEnd = new Date(eventObj.start.getTime() + (60 * 60 * 1000));
-          end = tempEnd.toISOString();
+          end = new Date(eventObj.start.getTime() + 60 * 60 * 1000).toISOString();
         }
 
         openSlotPopup(start, end);
       });
 
       cal.on("dateClick", function(info){
-        /*
-          Optional: if your calendar is selectable by cell click, this also opens the popup.
-          Default to 1 hour if no explicit end exists.
-        */
         const start = info.date ? info.date.toISOString() : "";
-        const tempEnd = info.date ? new Date(info.date.getTime() + (60 * 60 * 1000)).toISOString() : "";
-        openSlotPopup(start, tempEnd);
+        const end = info.date ? new Date(info.date.getTime() + 60 * 60 * 1000).toISOString() : "";
+        openSlotPopup(start, end);
       });
     }
 
     return true;
   }
 
-  /* Retry for a moment because app.js may initialize after DOMContentLoaded */
   let tries = 0;
   const hookTimer = setInterval(function(){
     tries += 1;
@@ -779,305 +722,6 @@ Book directly from the calendar, or use the request form below to choose a slot 
   }, 250);
 })();
 </script>
-
-</body>
-</html>
-```
-font-weight: 800;
-font-size: 1rem;
-}
-
-.booking-card-b{
-padding: 18px;
-}
-
-#calendar{
-min-height:760px;
-}
-
-.fc{
-color:#f5f5fb;
-}
-
-.fc .fc-toolbar{
-flex-wrap:wrap;
-gap:10px;
-margin-bottom:16px;
-}
-
-.fc .fc-toolbar-title{
-color:#f5f5fb;
-font-size:1.3rem;
-}
-
-.fc .fc-button{
-background:#ff8fc7;
-border:none;
-color:#130612;
-font-weight:700;
-border-radius:10px;
-box-shadow:none;
-}
-
-.fc .fc-button:hover{
-background:#ffb3da;
-}
-
-.fc .fc-button-primary:not(:disabled).fc-button-active{
-background:#ffb3da;
-color:#130612;
-}
-
-.fc-theme-standard td,
-.fc-theme-standard th,
-.fc-theme-standard .fc-scrollgrid{
-border-color: rgba(255,255,255,0.10);
-}
-
-.fc-daygrid-day-number,
-.fc-timegrid-slot-label-cushion,
-.fc-timegrid-axis-cushion{
-color:#f5f5fb;
-text-decoration:none;
-}
-
-/* DAY HEADER STYLING (MON TUE WED) */
-
-.fc-col-header-cell{
-background:#ff8fc7;
-}
-
-.fc-col-header-cell-cushion{
-color:#000000;
-font-weight:700;
-text-decoration:none;
-}
-
-.fc-event{
-background: rgba(255,143,199,0.16);
-border: 1px solid rgba(255,143,199,0.45);
-color:#ffd9ec;
-border-radius:10px;
-padding:2px 6px;
-font-size:12px;
-cursor:pointer;
-}
-
-.fc-event-main{
-white-space:normal;
-}
-
-.form-grid{
-display:grid;
-gap:12px;
-}
-
-.helper{
-color:#b9b9cc;
-font-size:14px;
-line-height:1.5;
-}
-
-.inline-actions{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-top:12px;
-}
-
-.selected-slot-chip{
-display:inline-block;
-margin-top:8px;
-padding:8px 12px;
-border-radius:999px;
-border:1px solid rgba(255,143,199,0.30);
-background: rgba(255,143,199,0.10);
-color:#ffb3da;
-font-size:13px;
-font-weight:700;
-}
-
-.slot-popup-backdrop{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.55);
-z-index:9998;
-padding:18px;
-overflow:auto;
-}
-
-.slot-popup-backdrop.show{
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.slot-popup{
-width:min(520px,100%);
-background: linear-gradient(180deg, rgba(18,18,32,0.98), rgba(18,18,32,0.92));
-border:1px solid rgba(255,255,255,0.10);
-border-radius:18px;
-box-shadow:0 30px 80px rgba(0,0,0,0.45);
-overflow:hidden;
-}
-
-.slot-popup-h{
-padding:14px 18px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:10px;
-border-bottom:1px solid rgba(255,255,255,0.08);
-}
-
-.slot-popup-h h2{
-margin:0;
-font-size:1.05rem;
-}
-
-.slot-popup-b{
-padding:18px;
-}
-
-.slot-popup-f{
-padding:14px 18px 18px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-.close-x{
-background:transparent;
-border:0;
-color:#f5f5fb;
-font-size:22px;
-cursor:pointer;
-box-shadow:none;
-padding:0;
-}
-
-.close-x:hover{
-color:#ffb3da;
-transform:none;
-}
-
-</style>
-</head>
-
-<body>
-
-<header>
-<nav>
-<a class="active" href="index.html">Booking</a>
-<a href="gallery.html">Gallery</a>
-<a href="policies.html">Policies</a>
-</nav>
-</header>
-
-<main>
-
-<h1>Axani Nails</h1>
-
-<p class="booking-intro">
-Book directly from the calendar, or use the request form below to choose a slot from the dropdown.
-<br>
-<b>Bookings are not confirmed until approved and the deposit is paid.</b>
-</p>
-
-<div class="booking-grid">
-
-<section class="booking-card">
-<div class="booking-card-h">Calendar Booking</div>
-
-<div class="booking-card-b">
-
-<p class="helper">
-Click an available slot to open a booking popup for that specific time.
-</p>
-
-<div id="calendar"></div>
-
-<p id="emptyCalendarNote" class="helper" style="display:none;margin-top:14px;">
-No availability is showing right now. Add rows in your <b>AVAILABILITY</b> sheet and mark them TRUE.
-</p>
-
-</div>
-</section>
-
-
-<section class="booking-card">
-<div class="booking-card-h">Request by Dropdown</div>
-
-<div class="booking-card-b">
-
-<p class="helper">
-This is the alternate booking option. Choose a slot from the dropdown and submit your request here.
-</p>
-
-<form id="inlineBookingForm" class="form-grid">
-
-<label for="inline_slotSelect">Choose a time *</label>
-<select id="inline_slotSelect" required></select>
-
-<div id="inlineSelectedSlot" class="selected-slot-chip">
-Choose a slot above
-</div>
-
-<input type="hidden" id="inline_requestedStart" name="requested_start" />
-<input type="hidden" id="inline_requestedEnd" name="requested_end" />
-
-<label for="inline_preferred_name">Preferred name *</label>
-<input id="inline_preferred_name" name="preferred_name" required />
-
-<label for="inline_client_email">Email *</label>
-<input id="inline_client_email" name="client_email" type="email" required />
-
-<label for="inline_client_phone">Phone (optional)</label>
-<input id="inline_client_phone" name="client_phone" type="tel" />
-
-<label for="inline_service">Service *</label>
-
-<select id="inline_service" name="service" required>
-<option value="" disabled selected>Select…</option>
-<option value="acrylic">acrylic</option>
-<option value="gel">gel</option>
-</select>
-
-<label for="inline_addressType">Preferred address *</label>
-
-<select id="inline_addressType" name="address_type" required>
-<option value="" disabled selected>Select…</option>
-<option value="on campus">on campus</option>
-<option value="other">other</option>
-</select>
-
-<div id="inline_addressOtherWrap" style="display:none;">
-<label for="inline_address_text">Address</label>
-<input id="inline_address_text" name="address_text" placeholder="Street, City, State" />
-</div>
-
-<label for="inline_inspo_file">Inspo picture (optional)</label>
-<input id="inline_inspo_file" name="inspo_file" type="file" accept="image/*" />
-
-<label for="inline_notes">Notes (optional)</label>
-<textarea id="inline_notes" name="notes" rows="4"></textarea>
-
-<div class="inline-actions">
-<button id="inlineSubmitBtn" type="submit">Submit request</button>
-</div>
-
-</form>
-
-</div>
-</section>
-
-</div>
-
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-<script src="app.js"></script>
 
 </body>
 </html>
