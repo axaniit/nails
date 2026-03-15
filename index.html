@@ -134,6 +134,12 @@
   gap:12px;
 }
 
+.two-col{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
 .helper{
   color:#b9b9cc;
   font-size:14px;
@@ -168,7 +174,7 @@
   background:rgba(0,0,0,0.55);
   z-index:9998;
   padding:18px;
-  overflow-y:auto; /* fix for cut off popup */
+  overflow-y:auto;
   overflow-x:hidden;
 }
 
@@ -176,7 +182,7 @@
 .confirm-popup-backdrop.show,
 .info-popup-backdrop.show{
   display:flex;
-  align-items:flex-start; /* keeps top accessible */
+  align-items:flex-start;
   justify-content:center;
 }
 
@@ -190,8 +196,8 @@
   box-shadow:0 30px 80px rgba(0,0,0,0.45);
   overflow:hidden;
   margin:24px auto;
-  max-height:calc(100vh - 48px); /* fix for cut off popup */
-  overflow-y:auto; /* inner scroll bar */
+  max-height:calc(100vh - 48px);
+  overflow-y:auto;
 }
 
 .slot-popup-h,
@@ -316,6 +322,10 @@
     max-height:calc(100vh - 20px);
     margin:10px auto;
   }
+
+  .two-col{
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 
@@ -361,6 +371,8 @@ document.addEventListener("DOMContentLoaded", function(){
 <p class="booking-intro">
 Book directly from the calendar, or use the request form below to choose a slot from the dropdown.
 <br>
+<b>Past dates stay visible for reference, but they cannot be booked.</b>
+<br>
 <b>Bookings are not confirmed until approved and the deposit is paid.</b>
 </p>
 
@@ -370,7 +382,7 @@ Book directly from the calendar, or use the request form below to choose a slot 
   <div class="booking-card-h">Calendar Booking</div>
   <div class="booking-card-b">
     <p class="helper">
-      Click an available slot to open the booking popup. If a slot is long, you can type which time within that slot works best for you.
+      Click an available slot to open the booking popup. If a slot is long, choose a preferred start and end time within that block.
     </p>
 
     <div id="calendar"></div>
@@ -386,13 +398,15 @@ Book directly from the calendar, or use the request form below to choose a slot 
   <div class="booking-card-b">
 
     <p class="helper">
-      This is the alternate booking option. Choose a slot from the dropdown, then type the time inside that slot that works best for you.
+      Choose an availability block below, then enter the preferred start and end time you want within that block.
     </p>
 
     <form id="inlineBookingForm" class="form-grid">
 
       <label for="inline_slotSelect">Choose a time block *</label>
-      <select id="inline_slotSelect" required></select>
+      <select id="inline_slotSelect" required>
+        <option value="" disabled selected>Choose a slot</option>
+      </select>
 
       <div id="inlineSelectedSlot" class="selected-slot-chip">
         Choose a slot above
@@ -401,8 +415,16 @@ Book directly from the calendar, or use the request form below to choose a slot 
       <input type="hidden" id="inline_requestedStart" name="requested_start" />
       <input type="hidden" id="inline_requestedEnd" name="requested_end" />
 
-      <label for="inline_requested_time_text">Preferred time within that slot *</label>
-      <input id="inline_requested_time_text" name="requested_time_text" placeholder="Example: 2:30 PM or anytime after 4" required />
+      <div class="two-col">
+        <div>
+          <label for="inline_preferredTimeStart">Preferred start time *</label>
+          <input id="inline_preferredTimeStart" name="preferred_time_start" type="time" required />
+        </div>
+        <div>
+          <label for="inline_preferredTimeEnd">Preferred end time *</label>
+          <input id="inline_preferredTimeEnd" name="preferred_time_end" type="time" required />
+        </div>
+      </div>
 
       <label for="inline_preferred_name">Preferred name *</label>
       <input id="inline_preferred_name" name="preferred_name" required />
@@ -460,16 +482,23 @@ Book directly from the calendar, or use the request form below to choose a slot 
     <div class="slot-popup-b">
       <div id="popupSelectedSlot" class="popup-slot-chip">No slot selected</div>
       <p class="slot-note">
-        If this availability block is long, type the exact time inside the block that works best for you.
+        Choose your preferred start and end time within this availability block.
       </p>
 
-      <!-- this popup form is only a UI helper; data is copied into the real inline form -->
       <form id="popupBookingForm" class="form-grid">
         <input type="hidden" id="popup_requestedStart" />
         <input type="hidden" id="popup_requestedEnd" />
 
-        <label for="popup_requested_time_text">Preferred time within this slot *</label>
-        <input id="popup_requested_time_text" placeholder="Example: 2:30 PM or anytime after 4" required />
+        <div class="two-col">
+          <div>
+            <label for="popup_preferredTimeStart">Preferred start time *</label>
+            <input id="popup_preferredTimeStart" type="time" required />
+          </div>
+          <div>
+            <label for="popup_preferredTimeEnd">Preferred end time *</label>
+            <input id="popup_preferredTimeEnd" type="time" required />
+          </div>
+        </div>
 
         <label for="popup_preferred_name">Preferred name *</label>
         <input id="popup_preferred_name" required />
@@ -558,6 +587,8 @@ Book directly from the calendar, or use the request form below to choose a slot 
   </div>
 </div>
 
+<div id="toast" class="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script src="app.js"></script>
 
@@ -568,7 +599,8 @@ Book directly from the calendar, or use the request form below to choose a slot 
   const inlineSelectedSlot = document.getElementById("inlineSelectedSlot");
   const inlineRequestedStart = document.getElementById("inline_requestedStart");
   const inlineRequestedEnd = document.getElementById("inline_requestedEnd");
-  const inlineRequestedTimeText = document.getElementById("inline_requested_time_text");
+  const inlinePreferredTimeStart = document.getElementById("inline_preferredTimeStart");
+  const inlinePreferredTimeEnd = document.getElementById("inline_preferredTimeEnd");
   const inlineAddressType = document.getElementById("inline_addressType");
   const inlineAddressOtherWrap = document.getElementById("inline_addressOtherWrap");
   const inlineAddressText = document.getElementById("inline_address_text");
@@ -580,7 +612,8 @@ Book directly from the calendar, or use the request form below to choose a slot 
   const popupForm = document.getElementById("popupBookingForm");
   const popupRequestedStart = document.getElementById("popup_requestedStart");
   const popupRequestedEnd = document.getElementById("popup_requestedEnd");
-  const popupRequestedTimeText = document.getElementById("popup_requested_time_text");
+  const popupPreferredTimeStart = document.getElementById("popup_preferredTimeStart");
+  const popupPreferredTimeEnd = document.getElementById("popup_preferredTimeEnd");
   const popupPreferredName = document.getElementById("popup_preferred_name");
   const popupClientEmail = document.getElementById("popup_client_email");
   const popupClientPhone = document.getElementById("popup_client_phone");
@@ -601,6 +634,18 @@ Book directly from the calendar, or use the request form below to choose a slot 
   const infoPopupOk = document.getElementById("infoPopupOk");
 
   let confirmationOpen = false;
+  let calendarHooked = false;
+
+  function toastLikeFallback(msg){
+    const t = document.getElementById("toast");
+    if (!t) {
+      alert(msg);
+      return;
+    }
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+  }
 
   function formatSlotLabel(start, end){
     try{
@@ -641,13 +686,56 @@ Book directly from the calendar, or use the request form below to choose a slot 
     popupAddressOtherWrap.style.display = popupAddressType.value === "other" ? "block" : "none";
   }
 
+  function resetDropdownPlaceholder(){
+    const existing = inlineSlotSelect.querySelector('option[data-placeholder="1"]');
+    if (!existing){
+      const ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = "Choose a slot";
+      ph.disabled = true;
+      ph.selected = !inlineSlotSelect.value;
+      ph.setAttribute("data-placeholder", "1");
+      inlineSlotSelect.insertBefore(ph, inlineSlotSelect.firstChild);
+    }
+  }
+
+  function clearNoFutureMessage(){
+    Array.from(inlineSlotSelect.options).forEach(opt => {
+      if (opt.dataset.noFuture === "1") opt.remove();
+    });
+  }
+
+  function addNoFutureMessage(){
+    clearNoFutureMessage();
+    const msg = document.createElement("option");
+    msg.value = "";
+    msg.textContent = "No future slots available right now";
+    msg.disabled = true;
+    msg.selected = true;
+    msg.dataset.noFuture = "1";
+    inlineSlotSelect.appendChild(msg);
+  }
+
+  function getRealSlotOptions(){
+    return Array.from(inlineSlotSelect.options).filter(opt =>
+      !opt.dataset.placeholder &&
+      !opt.dataset.noFuture
+    );
+  }
+
   function ensureSelectHasOption(start, end){
     if (!start || isPastDateTime(end || start)) return;
+
+    clearNoFutureMessage();
+    resetDropdownPlaceholder();
 
     const value = String(start);
     const label = formatSlotLabel(start, end);
 
-    let existing = Array.from(inlineSlotSelect.options).find(opt => opt.value === value);
+    let existing = Array.from(inlineSlotSelect.options).find(opt =>
+      opt.value === value && !opt.dataset.placeholder && !opt.dataset.noFuture
+    );
+
     if (!existing){
       existing = document.createElement("option");
       existing.value = value;
@@ -663,6 +751,36 @@ Book directly from the calendar, or use the request form below to choose a slot 
     inlineRequestedStart.value = value;
     inlineRequestedEnd.value = end || "";
     inlineSelectedSlot.textContent = label;
+  }
+
+  function normalizeTimeInRange(startIso, endIso, timeValue){
+    if (!startIso || !timeValue) return "";
+    const base = new Date(startIso);
+    if (Number.isNaN(base.getTime())) return "";
+
+    const [hh, mm] = String(timeValue).split(":").map(Number);
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return "";
+
+    const candidate = new Date(base);
+    candidate.setHours(hh, mm, 0, 0);
+
+    if (endIso){
+      const end = new Date(endIso);
+      if (!Number.isNaN(end.getTime())){
+        const blockStart = new Date(startIso);
+        if (candidate < blockStart || candidate > end){
+          return "";
+        }
+      }
+    }
+
+    return candidate.toISOString();
+  }
+
+  function combineDateAndTime(startIso, endIso, startTimeValue, endTimeValue){
+    const preferredStartIso = normalizeTimeInRange(startIso, endIso, startTimeValue);
+    const preferredEndIso = normalizeTimeInRange(startIso, endIso, endTimeValue);
+    return { preferredStartIso, preferredEndIso };
   }
 
   function openSlotPopup(start, end){
@@ -707,13 +825,24 @@ Book directly from the calendar, or use the request form below to choose a slot 
   }
 
   function copyPopupToInline(){
-    /* this is the critical fix for requested start/end not reaching admin */
-    inlineRequestedStart.value = popupRequestedStart.value || "";
-    inlineRequestedEnd.value = popupRequestedEnd.value || "";
+    const slotStart = popupRequestedStart.value || "";
+    const slotEnd = popupRequestedEnd.value || "";
 
-    ensureSelectHasOption(popupRequestedStart.value, popupRequestedEnd.value);
+    ensureSelectHasOption(slotStart, slotEnd);
 
-    inlineRequestedTimeText.value = popupRequestedTimeText.value || "";
+    inlinePreferredTimeStart.value = popupPreferredTimeStart.value || "";
+    inlinePreferredTimeEnd.value = popupPreferredTimeEnd.value || "";
+
+    const combined = combineDateAndTime(
+      slotStart,
+      slotEnd,
+      popupPreferredTimeStart.value,
+      popupPreferredTimeEnd.value
+    );
+
+    inlineRequestedStart.value = combined.preferredStartIso || slotStart;
+    inlineRequestedEnd.value = combined.preferredEndIso || slotEnd;
+
     document.getElementById("inline_preferred_name").value = popupPreferredName.value || "";
     document.getElementById("inline_client_email").value = popupClientEmail.value || "";
     document.getElementById("inline_client_phone").value = popupClientPhone.value || "";
@@ -734,8 +863,11 @@ Book directly from the calendar, or use the request form below to choose a slot 
   }
 
   function filterPastOptionsInDropdown(){
-    const options = Array.from(inlineSlotSelect.options);
-    options.forEach(opt => {
+    resetDropdownPlaceholder();
+    clearNoFutureMessage();
+
+    Array.from(inlineSlotSelect.options).forEach(opt => {
+      if (opt.dataset.placeholder || opt.dataset.noFuture) return;
       const start = opt.value;
       const end = opt.dataset.end || "";
       if (start && isPastDateTime(end || start)){
@@ -743,29 +875,119 @@ Book directly from the calendar, or use the request form below to choose a slot 
       }
     });
 
-    if (!inlineSlotSelect.options.length){
-      const ph = document.createElement("option");
-      ph.value = "";
-      ph.textContent = "No future slots available right now";
-      ph.disabled = true;
-      ph.selected = true;
-      inlineSlotSelect.appendChild(ph);
+    const realOptions = getRealSlotOptions();
+    if (!realOptions.length){
+      addNoFutureMessage();
     }
+  }
+
+  function harvestCalendarEventsToDropdown(){
+    const cal = window.__axaniLastCalendar || (window.__axaniCalendars && window.__axaniCalendars[0]);
+    if (!cal || typeof cal.getEvents !== "function") return false;
+
+    clearNoFutureMessage();
+    resetDropdownPlaceholder();
+
+    const existingValues = new Set(
+      getRealSlotOptions().map(opt => opt.value)
+    );
+
+    const events = cal.getEvents();
+    events.forEach(ev => {
+      const start = ev.start ? ev.start.toISOString() : "";
+      let end = ev.end ? ev.end.toISOString() : "";
+
+      if (!start) return;
+      if (!end && ev.start){
+        end = new Date(ev.start.getTime() + 60 * 60 * 1000).toISOString();
+      }
+      if (isPastDateTime(end || start)) return;
+      if (existingValues.has(start)) return;
+
+      const opt = document.createElement("option");
+      opt.value = start;
+      opt.textContent = formatSlotLabel(start, end);
+      opt.dataset.end = end || "";
+      inlineSlotSelect.appendChild(opt);
+      existingValues.add(start);
+    });
+
+    filterPastOptionsInDropdown();
+    return true;
   }
 
   inlineAddressType.addEventListener("change", syncAddressWraps);
   popupAddressType.addEventListener("change", syncAddressWraps);
   syncAddressWraps();
+  resetDropdownPlaceholder();
 
   inlineSlotSelect.addEventListener("change", function(){
     const selectedOption = inlineSlotSelect.options[inlineSlotSelect.selectedIndex];
-    inlineRequestedStart.value = inlineSlotSelect.value || "";
-    inlineRequestedEnd.value = selectedOption ? (selectedOption.dataset.end || "") : "";
-    inlineSelectedSlot.textContent = selectedOption ? selectedOption.textContent : "Choose a slot above";
+    if (!selectedOption || selectedOption.dataset.placeholder || selectedOption.dataset.noFuture){
+      inlineRequestedStart.value = "";
+      inlineRequestedEnd.value = "";
+      inlineSelectedSlot.textContent = "Choose a slot above";
+      return;
+    }
+
+    const blockStart = inlineSlotSelect.value || "";
+    const blockEnd = selectedOption.dataset.end || "";
+
+    const combined = combineDateAndTime(
+      blockStart,
+      blockEnd,
+      inlinePreferredTimeStart.value,
+      inlinePreferredTimeEnd.value
+    );
+
+    inlineRequestedStart.value = combined.preferredStartIso || blockStart;
+    inlineRequestedEnd.value = combined.preferredEndIso || blockEnd;
+    inlineSelectedSlot.textContent = selectedOption.textContent;
   });
+
+  function updateHiddenTimesFromDropdown(){
+    const selectedOption = inlineSlotSelect.options[inlineSlotSelect.selectedIndex];
+    if (!selectedOption || selectedOption.dataset.placeholder || selectedOption.dataset.noFuture) return;
+
+    const blockStart = selectedOption.value || "";
+    const blockEnd = selectedOption.dataset.end || "";
+
+    const combined = combineDateAndTime(
+      blockStart,
+      blockEnd,
+      inlinePreferredTimeStart.value,
+      inlinePreferredTimeEnd.value
+    );
+
+    inlineRequestedStart.value = combined.preferredStartIso || blockStart;
+    inlineRequestedEnd.value = combined.preferredEndIso || blockEnd;
+  }
+
+  inlinePreferredTimeStart.addEventListener("change", updateHiddenTimesFromDropdown);
+  inlinePreferredTimeEnd.addEventListener("change", updateHiddenTimesFromDropdown);
 
   loadIntoFormBtn.addEventListener("click", function(){
     if (!popupForm.reportValidity()) return;
+
+    const blockStart = popupRequestedStart.value;
+    const blockEnd = popupRequestedEnd.value;
+    const combined = combineDateAndTime(
+      blockStart,
+      blockEnd,
+      popupPreferredTimeStart.value,
+      popupPreferredTimeEnd.value
+    );
+
+    if (!combined.preferredStartIso || !combined.preferredEndIso){
+      toastLikeFallback("Please choose valid start and end times within the slot.");
+      return;
+    }
+
+    if (new Date(combined.preferredEndIso) <= new Date(combined.preferredStartIso)){
+      toastLikeFallback("Preferred end time must be after preferred start time.");
+      return;
+    }
+
     copyPopupToInline();
     closeSlotPopup();
     inlineForm.scrollIntoView({ behavior:"smooth", block:"start" });
@@ -775,10 +997,28 @@ Book directly from the calendar, or use the request form below to choose a slot 
     e.preventDefault();
     if (!popupForm.reportValidity()) return;
 
+    const blockStart = popupRequestedStart.value;
+    const blockEnd = popupRequestedEnd.value;
+    const combined = combineDateAndTime(
+      blockStart,
+      blockEnd,
+      popupPreferredTimeStart.value,
+      popupPreferredTimeEnd.value
+    );
+
+    if (!combined.preferredStartIso || !combined.preferredEndIso){
+      toastLikeFallback("Please choose valid start and end times within the slot.");
+      return;
+    }
+
+    if (new Date(combined.preferredEndIso) <= new Date(combined.preferredStartIso)){
+      toastLikeFallback("Preferred end time must be after preferred start time.");
+      return;
+    }
+
     copyPopupToInline();
     closeSlotPopup();
 
-    /* use the real form submit so app.js picks up the named fields */
     if (typeof inlineForm.requestSubmit === "function"){
       inlineForm.requestSubmit();
     } else {
@@ -788,8 +1028,35 @@ Book directly from the calendar, or use the request form below to choose a slot 
   });
 
   inlineForm.addEventListener("submit", function(e){
+    const selectedOption = inlineSlotSelect.options[inlineSlotSelect.selectedIndex];
+    if (!selectedOption || selectedOption.dataset.placeholder || selectedOption.dataset.noFuture){
+      e.preventDefault();
+      toastLikeFallback("Please choose a slot first.");
+      return;
+    }
+
+    updateHiddenTimesFromDropdown();
+
     const start = inlineRequestedStart.value;
     const end = inlineRequestedEnd.value;
+
+    if (!inlinePreferredTimeStart.value || !inlinePreferredTimeEnd.value){
+      e.preventDefault();
+      toastLikeFallback("Please enter both a preferred start and end time.");
+      return;
+    }
+
+    if (!start || !end){
+      e.preventDefault();
+      toastLikeFallback("Please choose valid times within the selected slot.");
+      return;
+    }
+
+    if (new Date(end) <= new Date(start)){
+      e.preventDefault();
+      toastLikeFallback("Preferred end time must be after preferred start time.");
+      return;
+    }
 
     if (isPastDateTime(end || start)){
       e.preventDefault();
@@ -797,30 +1064,8 @@ Book directly from the calendar, or use the request form below to choose a slot 
       return;
     }
 
-    /* guard: make sure hidden values exist before submit goes to app.js */
-    if (!start){
-      e.preventDefault();
-      toastLikeFallback("Please select a slot first.");
-      return;
-    }
-
     setTimeout(openConfirmPopup, 150);
   });
-
-  function toastLikeFallback(msg){
-    try{
-      const t = document.getElementById("toast");
-      if (!t) {
-        alert(msg);
-        return;
-      }
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 3000);
-    } catch(err){
-      alert(msg);
-    }
-  }
 
   slotPopupX.addEventListener("click", closeSlotPopup);
   slotPopupCloseBtn.addEventListener("click", closeSlotPopup);
@@ -851,9 +1096,9 @@ Book directly from the calendar, or use the request form below to choose a slot 
 
   function attachCalendarHooks(){
     const cal = window.__axaniLastCalendar || (window.__axaniCalendars && window.__axaniCalendars[0]);
-    if (!cal || cal.__axaniHooksAttached) return false;
+    if (!cal || calendarHooked) return false;
 
-    cal.__axaniHooksAttached = true;
+    calendarHooked = true;
 
     if (typeof cal.on === "function"){
       cal.on("eventClick", function(info){
@@ -872,6 +1117,7 @@ Book directly from the calendar, or use the request form below to choose a slot 
           return;
         }
 
+        ensureSelectHasOption(start, end);
         openSlotPopup(start, end);
       });
 
@@ -884,6 +1130,7 @@ Book directly from the calendar, or use the request form below to choose a slot 
           return;
         }
 
+        ensureSelectHasOption(start, end);
         openSlotPopup(start, end);
       });
 
@@ -894,22 +1141,29 @@ Book directly from the calendar, or use the request form below to choose a slot 
           info.el.classList.add("past-slot");
         }
       });
+
+      cal.on("eventsSet", function(){
+        harvestCalendarEventsToDropdown();
+      });
     }
 
+    harvestCalendarEventsToDropdown();
     return true;
   }
 
   let tries = 0;
   const hookTimer = setInterval(function(){
     tries += 1;
-    filterPastOptionsInDropdown();
 
     const attached = attachCalendarHooks();
-    if (attached || tries > 40){
-      clearInterval(hookTimer);
+    harvestCalendarEventsToDropdown();
+
+    if ((attached && getRealSlotOptions().length >= 0) || tries > 60){
       filterPastOptionsInDropdown();
+      if (tries > 60) clearInterval(hookTimer);
+      if (attached && getRealSlotOptions().length > 0) clearInterval(hookTimer);
     }
-  }, 250);
+  }, 300);
 })();
 </script>
 
